@@ -1,8 +1,38 @@
-<manifest package="com.viaden.opensdk"
+<manifest package="com.viaden.sdk"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
-    <application/>
+    <application>
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+                <category android:name="com.viaden.sdk"/>
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".GcmService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+            </intent-filter>
+        </service>
+        <service
+            android:name=".InstanceIdService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID"/>
+            </intent-filter>
+        </service>
+        <service
+            android:name=".RegistrationService"
+            android:exported="false"/>
+    </application>
 
 </manifest>

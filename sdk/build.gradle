@@ -1,4 +1,7 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group = 'com.github.viaden'
 
 android {
     compileSdkVersion 25
@@ -33,6 +36,7 @@ android {
 }
 
 dependencies {
+    compile 'com.google.android.gms:play-services-gcm:10.2.0'
     //
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
