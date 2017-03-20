@@ -6,6 +6,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <application>
+        <meta-data
+            android:name="gcm_sender_id"
+            android:value="${gcmSenderId}"/>
+
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
             android:exported="true"

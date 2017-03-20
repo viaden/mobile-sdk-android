@@ -3,8 +3,11 @@ package com.viaden.sdk;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -31,7 +34,13 @@ public class RegistrationService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable final Intent intent) {
         try {
-            new InstanceData(InstanceID.getInstance(this)).store(FirebaseDatabase.getInstance().getReference());
+            final ApplicationInfo info = getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA);
+            final String gcmSenderId = info.metaData.getString("gcm_sender_id");
+            if (!TextUtils.isEmpty(gcmSenderId)) {
+                new InstanceData(gcmSenderId, InstanceID.getInstance(this)).store(FirebaseDatabase.getInstance().getReference());
+            } else {
+                Log.e(TAG, "Failed to load meta-data");
+            }
         } catch (@NonNull final Exception e) {
             Log.d(TAG, "Failed to complete token refresh", e);
         }
@@ -39,12 +48,15 @@ public class RegistrationService extends IntentService {
 
     private static class InstanceData {
         @NonNull
+        private final String gcmSenderId;
+        @NonNull
         private final String id;
         @NonNull
         private final String gcmToken;
         private final long creationTime;
 
-        private InstanceData(@NonNull final InstanceID instanceId) throws IOException {
+        private InstanceData(@NonNull final String gcmSenderId, @NonNull final InstanceID instanceId) throws IOException {
+            this.gcmSenderId = gcmSenderId;
             id = instanceId.getId();
             gcmToken = instanceId.getToken("", GoogleCloudMessaging.INSTANCE_ID_SCOPE);
             creationTime = instanceId.getCreationTime();
