@@ -14,11 +14,13 @@ android {
         versionCode 1001
         versionName "1.0.1"
 
+        resConfigs "en"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -27,6 +29,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
     lintOptions {
+        quiet true
+        textReport true
+        textOutput 'stdout'
         checkAllWarnings true
         warningsAsErrors true
     }
