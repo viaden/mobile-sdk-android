@@ -11,7 +11,7 @@ public class GcmService extends GcmListenerService {
 
     @Override
     public void onMessageReceived(@NonNull final String from, @NonNull final Bundle data) {
-        if (BuildConfig.DEBUG) {
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "onMessageReceived(" + from + ", " + data + ")");
         }
     }

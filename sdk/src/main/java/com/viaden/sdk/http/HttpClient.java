@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -129,29 +128,6 @@ public class HttpClient {
             connection.setDoOutput(true);
         }
         return connection;
-    }
-
-    static class StringResponseContentFactory implements ResponseContentFactory<String> {
-
-        @NonNull
-        @Override
-        public ResponseContent<String> create(final int statusCode, @NonNull final InputStream stream) throws IOException {
-            return new StringResponseContent(stream);
-        }
-
-        private static final class StringResponseContent implements ResponseContent<String> {
-            @Nullable
-            private final String content;
-
-            private StringResponseContent(@NonNull final InputStream stream) throws IOException {
-                content = new String(IOUtils.toByteArray(stream), Charset.forName("UTF-8"));
-            }
-
-            @Nullable
-            public String getContent() {
-                return content;
-            }
-        }
     }
 
     private class NetworkInterceptorChain implements NetworkInterceptor.Chain {

@@ -29,7 +29,7 @@ import java.util.List;
 
 public class RegistrationService extends IntentService {
     private static final String TAG = "RegService";
-    private static final String ENDPOINT = "https://viaden-fc3ff.firebaseio.com/";
+    private static final String ENDPOINT = BuildConfig.VIADEN_ENDPOINT;
 
     public RegistrationService() {
         super(TAG);
@@ -42,34 +42,46 @@ public class RegistrationService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable final Intent intent) {
-        if (BuildConfig.DEBUG) {
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "onHandleIntent()");
         }
         final String projectId = new MetaDataRetriever(getPackageName(), getPackageManager()).get("gcm_sender_id");
         if (TextUtils.isEmpty(projectId)) {
-            Log.e(TAG, "Failed to load meta-data");
+            if (Log.isLoggable(TAG, Log.ERROR)) {
+                Log.e(TAG, "Failed to load meta-data");
+            }
             return;
         }
         final InstanceData instanceData = new InstanceRetriever(InstanceID.getInstance(this), getPackageName(), projectId).get();
         if (instanceData == null) {
-            Log.e(TAG, "Failed to load instanceId data");
+            if (Log.isLoggable(TAG, Log.ERROR)) {
+                Log.e(TAG, "Failed to load instanceId data");
+            }
             return;
         }
         try {
             final Uri uri = Uri.parse(ENDPOINT).buildUpon()
                     .appendEncodedPath("instances")
-                    .appendEncodedPath(instanceData.id)
+                    .appendEncodedPath(instanceData.id + ".json")
                     .build();
+            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                Log.d(TAG, uri.toString());
+                Log.d(TAG, instanceData.asJson().toString());
+            }
             final HttpResponse response = new HttpClient().execute(new HttpRequest.Builder()
                     .setHttpMethod(HttpMethod.PUT)
                     .setUrl(uri.toString())
                     .setBody(new ByteArrayHttpBody(instanceData.asJson().toString(), "application/json"))
                     .build());
             if (response.getStatusCode() != 200) {
-                Log.d(TAG, "Server response status [" + response.getStatusCode() + "] " + response.getReasonPhrase());
+                if (Log.isLoggable(TAG, Log.ERROR)) {
+                    Log.e(TAG, "Server response status [" + response.getStatusCode() + "] " + response.getReasonPhrase());
+                }
             }
         } catch (@NonNull final IOException | JSONException e) {
-            Log.e(TAG, "Failed to save instanceId data", e);
+            if (Log.isLoggable(TAG, Log.ERROR)) {
+                Log.e(TAG, "Failed to save instanceId data", e);
+            }
         }
     }
 
@@ -100,7 +112,8 @@ public class RegistrationService extends IntentService {
             if (metaData == null) {
                 metaData = getMetaData(packageName, packageManager);
             }
-            return metaData.getString(key);
+            final String value = metaData.getString(key);
+            return value != null && value.startsWith("x") ? value.substring(1) : null;
         }
     }
 

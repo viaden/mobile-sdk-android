@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * {@code NetworkInterceptor} is used to observe requests going out and the corresponding responses coming back in.
  */
-interface NetworkInterceptor {
+public interface NetworkInterceptor {
     /**
      * Intercepts a {@link HttpRequest} with the help of
      * {@link NetworkInterceptor.Chain} and returns the intercepted {@link HttpResponse}.

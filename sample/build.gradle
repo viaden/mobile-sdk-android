@@ -1,0 +1,48 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 25
+
+        versionCode 1
+        versionName "1.0"
+        applicationId "com.viaden.sample"
+
+        resConfigs "en"
+        manifestPlaceholders = [gcmSenderId: "907692876014"]
+
+        multiDexEnabled = true
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    lintOptions {
+        checkAllWarnings true
+        warningsAsErrors true
+        quiet true
+        textReport true
+        textOutput 'stdout'
+        disable 'GoogleAppIndexingApiWarning', 'GoogleAppIndexingWarning', 'AllowBackup'
+    }
+    dexOptions {
+        javaMaxHeapSize "2048M"
+    }
+}
+
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:25.3.0'
+    compile project(':sdk')
+}
