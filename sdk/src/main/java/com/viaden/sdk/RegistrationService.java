@@ -42,6 +42,9 @@ public class RegistrationService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable final Intent intent) {
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "onHandleIntent()");
+        }
         final String projectId = new MetaDataRetriever(getPackageName(), getPackageManager()).get("gcm_sender_id");
         if (TextUtils.isEmpty(projectId)) {
             Log.e(TAG, "Failed to load meta-data");
