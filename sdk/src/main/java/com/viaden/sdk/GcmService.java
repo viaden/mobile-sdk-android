@@ -7,12 +7,12 @@ import android.util.Log;
 import com.google.android.gms.gcm.GcmListenerService;
 
 public class GcmService extends GcmListenerService {
-    private static final String TAG = "GcmService";
 
     @Override
     public void onMessageReceived(@NonNull final String from, @NonNull final Bundle data) {
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "onMessageReceived(" + from + ", " + data + ")");
+        if (Log.isLoggable(BuildConfig.LOG_TAG, Log.DEBUG)) {
+            Log.d(BuildConfig.LOG_TAG, "onMessageReceived(" + from + ", " + data + ")");
         }
+        startService(ProccessService.buildIntent(this, data));
     }
 }

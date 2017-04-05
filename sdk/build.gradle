@@ -15,13 +15,13 @@ android {
         versionName "1.0.1"
 
         resConfigs "en"
-        buildConfigField "String", "VIADEN_ENDPOINT", "\"${VIADEN_ENDPOINT}\""
+        buildConfigField "String", "LOG_TAG", "\"ViadenSdk\""
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         debug {
-            manifestPlaceholders = [gcmSenderId: ""]
+            manifestPlaceholders = [viadenSenderId: "", viadenEndpointId: ""]
         }
         release {
             minifyEnabled true
@@ -46,5 +46,5 @@ android {
 }
 
 dependencies {
-    compile 'com.google.android.gms:play-services-gcm:10.2.0'
+    compile 'com.google.android.gms:play-services-gcm:10.2.1'
 }

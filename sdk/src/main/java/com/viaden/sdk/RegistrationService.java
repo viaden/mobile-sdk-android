@@ -28,11 +28,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class RegistrationService extends IntentService {
-    private static final String TAG = "RegService";
-    private static final String ENDPOINT = BuildConfig.VIADEN_ENDPOINT;
 
     public RegistrationService() {
-        super(TAG);
+        super(BuildConfig.LOG_TAG);
     }
 
     @NonNull
@@ -42,31 +40,32 @@ public class RegistrationService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable final Intent intent) {
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "onHandleIntent()");
+        if (Log.isLoggable(BuildConfig.LOG_TAG, Log.DEBUG)) {
+            Log.d(BuildConfig.LOG_TAG, "onHandleIntent()");
         }
-        final String projectId = new MetaDataRetriever(getPackageName(), getPackageManager()).get("gcm_sender_id");
-        if (TextUtils.isEmpty(projectId)) {
-            if (Log.isLoggable(TAG, Log.ERROR)) {
-                Log.e(TAG, "Failed to load meta-data");
+        final String projectId = new MetaDataRetriever(getPackageName(), getPackageManager()).get("viadenSenderId");
+        final String endpoint = new MetaDataRetriever(getPackageName(), getPackageManager()).get("viadenEndpointId");
+        if (TextUtils.isEmpty(projectId) || TextUtils.isEmpty(endpoint)) {
+            if (Log.isLoggable(BuildConfig.LOG_TAG, Log.ERROR)) {
+                Log.e(BuildConfig.LOG_TAG, "Failed to load meta-data");
             }
             return;
         }
         final InstanceData instanceData = new InstanceRetriever(InstanceID.getInstance(this), getPackageName(), projectId).get();
         if (instanceData == null) {
-            if (Log.isLoggable(TAG, Log.ERROR)) {
-                Log.e(TAG, "Failed to load instanceId data");
+            if (Log.isLoggable(BuildConfig.LOG_TAG, Log.ERROR)) {
+                Log.e(BuildConfig.LOG_TAG, "Failed to load instanceId data");
             }
             return;
         }
         try {
-            final Uri uri = Uri.parse(ENDPOINT).buildUpon()
+            final Uri uri = Uri.parse("https://" + endpoint + ".firebaseio.com").buildUpon()
                     .appendEncodedPath("instances")
                     .appendEncodedPath(instanceData.id + ".json")
                     .build();
-            if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Log.d(TAG, uri.toString());
-                Log.d(TAG, instanceData.asJson().toString());
+            if (Log.isLoggable(BuildConfig.LOG_TAG, Log.DEBUG)) {
+                Log.d(BuildConfig.LOG_TAG, uri.toString());
+                Log.d(BuildConfig.LOG_TAG, instanceData.asJson().toString());
             }
             final HttpResponse response = new HttpClient().execute(new HttpRequest.Builder()
                     .setHttpMethod(HttpMethod.PUT)
@@ -74,13 +73,13 @@ public class RegistrationService extends IntentService {
                     .setBody(new ByteArrayHttpBody(instanceData.asJson().toString(), "application/json"))
                     .build());
             if (response.getStatusCode() != 200) {
-                if (Log.isLoggable(TAG, Log.ERROR)) {
-                    Log.e(TAG, "Server response status [" + response.getStatusCode() + "] " + response.getReasonPhrase());
+                if (Log.isLoggable(BuildConfig.LOG_TAG, Log.ERROR)) {
+                    Log.e(BuildConfig.LOG_TAG, "Server response status [" + response.getStatusCode() + "] " + response.getReasonPhrase());
                 }
             }
         } catch (@NonNull final IOException | JSONException e) {
-            if (Log.isLoggable(TAG, Log.ERROR)) {
-                Log.e(TAG, "Failed to save instanceId data", e);
+            if (Log.isLoggable(BuildConfig.LOG_TAG, Log.ERROR)) {
+                Log.e(BuildConfig.LOG_TAG, "Failed to save instanceId data", e);
             }
         }
     }

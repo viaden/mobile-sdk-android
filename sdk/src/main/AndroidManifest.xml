@@ -8,8 +8,11 @@
 
     <application>
         <meta-data
-            android:name="gcm_sender_id"
-            android:value="x${gcmSenderId}"/>
+            android:name="viadenSenderId"
+            android:value="x${viadenSenderId}"/>
+        <meta-data
+            android:name="viadenEndpointId"
+            android:value="x${viadenEndpointId}"/>
 
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
