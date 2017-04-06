@@ -9,7 +9,7 @@ import android.util.Log;
 
 public class DeviceStateReceiver extends BroadcastReceiver {
 
-    private static boolean hasAction(@Nullable final String action) {
+    private static boolean hasBroadcastAction(@Nullable final String action) {
         return Intent.ACTION_BOOT_COMPLETED.equals(action) ||
                 Intent.ACTION_DATE_CHANGED.equals(action) ||
                 Intent.ACTION_TIME_CHANGED.equals(action) ||
@@ -23,7 +23,7 @@ public class DeviceStateReceiver extends BroadcastReceiver {
         if (Log.isLoggable(BuildConfig.LOG_TAG, Log.DEBUG)) {
             Log.d(BuildConfig.LOG_TAG, "onHandleIntent(" + (intent == null ? "null" : intent.toUri(Intent.URI_INTENT_SCHEME)) + ")");
         }
-        if (intent == null || !hasAction(intent.getAction())) {
+        if (intent == null || !hasBroadcastAction(intent.getAction())) {
             return;
         }
         context.startService(RegistrationService.buildIntent(context));
