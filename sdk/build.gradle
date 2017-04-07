@@ -49,7 +49,7 @@ dependencies {
     compile 'com.google.android.gms:play-services-gcm:10.2.1'
     //
     testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-core:2.2.11'
-    testCompile 'org.robolectric:robolectric:3.2.2'
-    testCompile 'com.google.truth:truth:0.31'
+    testCompile 'org.mockito:mockito-core:2.7.21'
+    testCompile 'org.robolectric:robolectric:3.3.2'
+    testCompile 'com.google.truth:truth:0.32'
 }

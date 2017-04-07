@@ -2,16 +2,16 @@
   "steps": [
     {
       "method": "POST",
-      "url": "https://api.ampiri.com/v4/handshake?adPlaceId={adPlaceId}&deviceId={deviceId}",
+      "url": "https://api.ampiri.com/v4/handshake?deviceId=%{device.id.value}",
       "body": {
         "adPlace": {
-          "id": "{adPlaceId}",
+          "id": "adPlaceId",
           "type": "NATIVE"
         },
         "inventory": {
           "device": {
-            "id": "",
-            "idType": "",
+            "id": "%{device.id.value}",
+            "idType": "%{device.id.type}",
             "platform": "ANDROID",
             "vendor": "",
             "model": "",

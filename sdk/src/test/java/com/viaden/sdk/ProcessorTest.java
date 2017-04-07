@@ -13,6 +13,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -21,7 +22,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(constants = BuildConfig.class, manifest = Config.NONE, sdk = 23)
+@Config(constants = BuildConfig.class, manifest = Config.NONE, sdk = 23, shadows = {
+        ShadowDeviceIdTypeRetriever.class,
+        ShadowDeviceIdValueRetriever.class
+})
 public class ProcessorTest {
     @Captor
     private ArgumentCaptor<HttpRequest> captor;
@@ -38,7 +42,7 @@ public class ProcessorTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        subject = new Processor(httpClient, dispatcher, placeholder);
+        subject = new Processor(httpClient, dispatcher, new Placeholder(RuntimeEnvironment.application));
         when(httpClient.execute(any(HttpRequest.class))).thenReturn(httpResponse);
     }
 
@@ -53,6 +57,8 @@ public class ProcessorTest {
 
         final HttpRequest httpRequest = captor.getValue();
         assertThat(httpRequest).isNotNull();
-        assertThat(httpRequest.getUrl()).isEqualTo("https://api.ampiri.com/v4/handshake?adPlaceId={adPlaceId}&deviceId={deviceId}");
+        assertThat(httpRequest.getUrl()).isEqualTo("https://api.ampiri.com/v4/handshake?deviceId={deviceId}");
+        assertThat(httpRequest.getBody()).isNotNull();
+        assertThat(Resources.toString(httpRequest.getBody().getContent())).isEqualTo("");
     }
 }

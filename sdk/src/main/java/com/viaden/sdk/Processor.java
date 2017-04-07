@@ -70,7 +70,7 @@ class Processor {
                 .setHeaders(step.headers.asMap())
                 .setHttpMethod(step.httpMethod)
                 .setUrl(placeholder.format(step.url.toString()))
-                .setBody(new ByteArrayHttpBody(step.body.toString(), "application/json"))
+                .setBody(new ByteArrayHttpBody(placeholder.format(step.body.toString()), "application/json"))
                 .build();
     }
 

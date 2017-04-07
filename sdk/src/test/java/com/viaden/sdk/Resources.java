@@ -12,7 +12,7 @@ final class Resources {
     private Resources() {
     }
 
-    private static String toString(final InputStream is) {
+    static String toString(final InputStream is) {
         final BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         final StringBuilder sb = new StringBuilder();
         String line;
