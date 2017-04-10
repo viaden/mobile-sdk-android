@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 
 import static java.lang.Thread.currentThread;
 
-final class Resources {
+public final class Resources {
 
     private Resources() {
     }
@@ -30,7 +30,11 @@ final class Resources {
         return sb.toString();
     }
 
-    static String get(final String name) {
+    public static String asString(final String name) {
         return toString(currentThread().getContextClassLoader().getResourceAsStream(name));
+    }
+
+    public static InputStream asStream(final String name) {
+        return currentThread().getContextClassLoader().getResourceAsStream(name);
     }
 }

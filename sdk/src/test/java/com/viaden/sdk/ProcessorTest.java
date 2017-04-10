@@ -49,7 +49,7 @@ public class ProcessorTest {
     @Test
     public void process() throws Exception {
         when(httpResponse.getStatusCode()).thenReturn(200);
-        final Command command = new Command.Builder(new JSONObject(Resources.get("command.json"))).build();
+        final Command command = new Command.Builder(new JSONObject(Resources.asString("command.json"))).build();
 
         assertThat(command).isNotNull();
         subject.process(command);
@@ -59,6 +59,6 @@ public class ProcessorTest {
         assertThat(httpRequest).isNotNull();
         assertThat(httpRequest.getUrl()).isEqualTo("https://api.ampiri.com/v4/handshake?deviceId=fake_device_id_value");
         assertThat(httpRequest.getBody()).isNotNull();
-        assertThat(new JSONObject(Resources.toString(httpRequest.getBody().getContent())).toString()).isEqualTo(new JSONObject(Resources.get("request.json")).toString());
+        assertThat(new JSONObject(Resources.toString(httpRequest.getBody().getContent())).toString()).isEqualTo(new JSONObject(Resources.asString("request.json")).toString());
     }
 }

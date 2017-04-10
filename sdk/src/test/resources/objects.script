@@ -1,0 +1,27 @@
+#A short script to give some idea what can be done with the 
+#new java object access feature.
+#To run: 'java FSTest objects.script'
+#
+#Will run on java 1.2 and above as it accesses HashMaps..
+
+string test
+
+object hm=new java.util.HashMap()
+
+hm.put("first","123456")
+hm.put("test","this is a test")
+hm.put("some more",12+6+10)
+
+println(hm)
+
+test=hm.get("test")
+println(test)
+println("Timer is ",java.lang.System.currentTimeMillis())
+
+#if you had extended FScript such that a call to getMyObject() would
+#return an an object of some kind then the code below would work
+#
+#object myObj
+#
+#myObj=getMyObject()
+#myObj.doStuff()
