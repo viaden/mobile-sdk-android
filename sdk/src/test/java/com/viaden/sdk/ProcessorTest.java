@@ -57,8 +57,8 @@ public class ProcessorTest {
 
         final HttpRequest httpRequest = captor.getValue();
         assertThat(httpRequest).isNotNull();
-        assertThat(httpRequest.getUrl()).isEqualTo("https://api.ampiri.com/v4/handshake?deviceId={deviceId}");
+        assertThat(httpRequest.getUrl()).isEqualTo("https://api.ampiri.com/v4/handshake?deviceId=fake_device_id_value");
         assertThat(httpRequest.getBody()).isNotNull();
-        assertThat(Resources.toString(httpRequest.getBody().getContent())).isEqualTo("");
+        assertThat(new JSONObject(Resources.toString(httpRequest.getBody().getContent())).toString()).isEqualTo(new JSONObject(Resources.get("request.json")).toString());
     }
 }
