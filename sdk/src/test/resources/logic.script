@@ -1,0 +1,41 @@
+#thest the various logic ops
+
+func logictest()
+	int a,b
+
+	a=0
+	b=1
+
+	if b
+		println("All is Well")
+	else
+		fail("Simple truth test failed")
+	endif
+
+	if !a
+		println("All is Well")
+	else
+		fail("Not test failed")
+	endif
+
+	if a || b
+		println("All is Well")
+	else
+		fail("Or test failed")
+	endif
+
+	if b && b
+		println("All is Well")
+	else
+		fail("And test failed")
+	endif
+
+	if ((!b && !b) && (a || b)) || 1
+		println("All is Well")
+	else
+		fail("Compound test failed")
+	endif
+endfunc
+
+logictest()
+

@@ -14,4 +14,3 @@ public class FSUnsupportedException extends FSException {
         super("Unrecognized External: " + name);
     }
 }
-

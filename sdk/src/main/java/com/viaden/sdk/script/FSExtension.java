@@ -57,6 +57,4 @@ public interface FSExtension {
      * @return the return value (Object) of the call
      **/
     Object callFunction(String name, Vector params) throws FSException;
-
-
 }

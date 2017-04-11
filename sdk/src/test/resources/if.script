@@ -1,0 +1,36 @@
+#tests the if function
+
+func iftest()
+	int a,b,s
+	a=1
+	b=0
+
+	if !b
+		println("All is Well")
+		if a
+			println("All is Well")
+			if b==0 then s=1234
+			if s==1234
+				println("All is well")
+			else
+				fail("If test (single line1 failed")
+			endif
+		else
+			fail("Else Test failed")
+		endif
+
+		if b then
+			fail("Else Test2 failed")
+            if b then s=2468
+		else
+			println("All is Well")
+		endif
+
+	endif
+
+	if s==2468
+		fail("If test (single line2 failed"
+	endif
+endfunc
+
+iftest()

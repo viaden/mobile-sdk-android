@@ -1,0 +1,40 @@
+#This function tests the various math operators
+
+func mathtest()
+	int a,b
+
+	a=4
+	b=5
+	if (a+b)==9
+		println("All Is Well")
+	else
+		fail("Failed addition test")
+	endif
+
+	if (a*b)==20
+		println("All Is Well")
+	else 
+		fail("Failed multiplication test")
+	endif
+
+	if (a-b)==-1
+		println("All is Well")
+	else
+		fail("Failed subtraction test")
+	endif
+
+	if (a/a)==1
+		println("All is Well")
+	else
+		fail("Failed Division test")
+	endif
+
+	if (a*b)+(a-b)+(a/a)==20
+		println("All is Well")
+	else
+		fail("Arggg!")
+	endif
+
+endfunc
+
+mathtest()

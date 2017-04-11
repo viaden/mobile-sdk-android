@@ -1,0 +1,25 @@
+
+func whiletest()
+	println("Should print 0-5")
+	int a
+	while a<6
+		println(a)
+		a=a+1
+	endwhile
+
+	a=0
+	int b
+
+	println("Should print 0-5 twice")
+
+	while a<2
+		b=0
+		while b<6
+			println(b)
+			b=b+1
+		endwhile
+		a=a+1
+	endwhile
+endfunc
+
+whiletest()

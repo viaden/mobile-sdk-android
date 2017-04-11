@@ -86,13 +86,10 @@ final class LexAnn {
      * String representation of token (needs work)
      */
     public String toString() {
-
         final Class c = getClass();
         int n = 0;
         String tokenName = "", ret = "";
-
         final java.lang.reflect.Field[] fields = c.getFields();
-
         //try to get the human readable TT_* name via reflec magic
         for (n = 0; n < fields.length; n++) {
             final java.lang.reflect.Field f = fields[n];
@@ -104,15 +101,12 @@ final class LexAnn {
                 }
             } catch (final Exception e) {
             }
-
         }
-
         if (!tokenName.equals("")) {
             ret = tokenName + ":" + value;
         } else {
             ret = String.valueOf((char) ttype) + ":" + value;
         }
-
         return ret;
     }
 
@@ -144,7 +138,6 @@ final class LexAnn {
      */
     private int peekChar(final int offset) {
         final int n;
-
         n = pos + offset - 1;
         if (n >= line.length) {
             return EOL;
@@ -153,21 +146,18 @@ final class LexAnn {
         }
     }
 
-
     /**
      * Read the next token
      *
      * @return int - which is the charater read (not very useful)
      */
     public int nextToken() throws IOException {
-
         if (!pBack) {
             return nextT();
         } else {
             pBack = false;
             return ttype;
         }
-
     }
 
     /**
@@ -177,40 +167,36 @@ final class LexAnn {
         pBack = true;
     }
 
-
     //Internal next token function
     private int nextT() throws IOException {
-
         int cPos = 0;
-
-        if (c == 0) c = getChar();
-
+        if (c == 0) {
+            c = getChar();
+        }
         value = null;
-
-        while (Character.isWhitespace((char) c)) c = getChar();
-
+        while (Character.isWhitespace((char) c)) {
+            c = getChar();
+        }
         if (c == EOL) {
             ttype = TT_EOL;
-        }
-        //Comments
-        else if (c == '#') {
-            while (c != EOL) c = getChar();
+        } else if (c == '#') {
+            //Comments
+            while (c != EOL) {
+                c = getChar();
+            }
             //get the next item, will be an eol marker
             nextT();
             //then the 'real' next token
             nextT();
-        }
-        //Quoted Strings
-        else if (c == '"') {
+        } else if (c == '"') {
+            //Quoted Strings
             c = getChar();
-
             while ((c != EOL) && (c != '"')) {
                 if (cPos == cBuf.length) {
                     final char[] tmp = new char[cPos + DELTA];
                     System.arraycopy(cBuf, 0, tmp, 0, cPos);
                     cBuf = tmp;
                 }
-
                 if (c == '\\') {
                     final int c2 = getChar();
                     if (c2 == '\\') {
@@ -237,22 +223,18 @@ final class LexAnn {
                     c = getChar();
                 }
             }
-
             value = new String(cBuf, 0, cPos);
             c = getChar();
             ttype = TT_STRING;
-        }
-        //Words
-        else if (Character.isJavaIdentifierStart((char) c)) {
-
-            if (c == '$') //used like object or var
-            {
+        } else if (Character.isJavaIdentifierStart((char) c)) {
+            //Words
+            if (c == '$') {
+                //used like object or var
                 ttype = TT_DEFOBJECT;
                 value = "$";
                 c = getChar();
                 return ttype;
             }
-
             while (Character.isJavaIdentifierPart((char) c) || c == '.' || c == '_') {
                 if (cPos == cBuf.length) {
                     final char[] tmp = new char[cPos + DELTA];
@@ -262,9 +244,7 @@ final class LexAnn {
                 cBuf[cPos++] = (char) c;
                 c = getChar();
             }
-
             final String keyword = new String(cBuf, 0, cPos);
-
             if (keyword.equals("if")) {
                 ttype = TT_IF;
             } else if (keyword.equals("then")) {
@@ -308,11 +288,9 @@ final class LexAnn {
             } else {
                 ttype = TT_WORD;
             }
-
             value = keyword;
-        }
-        //Numbers
-        else if (Character.isDigit((char) c)) {
+        } else if (Character.isDigit((char) c)) {
+            //Numbers
             while (Character.isDigit((char) c) || c == '.') {
                 if (cPos == cBuf.length) {
                     final char[] tmp = new char[cPos + DELTA];
@@ -338,9 +316,8 @@ final class LexAnn {
                     value = new Integer(0);
                 }
             }
-        }
-        //others
-        else {
+        } else {
+            //others
             if (c == '+') {
                 ttype = TT_PLUS;
             } else if (c == '-') {
@@ -395,13 +372,7 @@ final class LexAnn {
                 ttype = c;
             }
             c = getChar();
-
         }
-
         return ttype;
     }
-
 }
-
-
-

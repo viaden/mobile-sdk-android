@@ -24,8 +24,7 @@ final class LineLoader {
      */
     public final void load(final Reader is) throws IOException {
         final BufferedReader in = new BufferedReader(is);
-        String s;
-        s = in.readLine();
+        String s = in.readLine();
         while (s != null) {
             addLine(s);
             s = in.readLine();
@@ -99,6 +98,4 @@ final class LineLoader {
         if (n < 0 || n >= lines.size()) return "";
         return (String) lines.elementAt(n);
     }
-
-
 }

@@ -9,4 +9,3 @@ public class FSException extends Exception {
         super(msg);
     }
 }
-

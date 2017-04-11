@@ -1,0 +1,61 @@
+#Test comparision ops
+
+func comptest()
+	int a,b
+	string s
+	a=40
+	b=50
+
+	if a==40
+		println("All is Well")
+	else
+		fail("Failed == test")
+	endif
+
+	if a<b
+		println("All is Well")
+	else
+		fail("Failed < test")
+	endif
+
+	if b>a
+		println("All is Well")
+	else
+		fail("Failed > test")
+	endif
+
+	if (b>=a) && (b>=50)
+		println("All is Well")
+	else
+		fail("Failed >= test")
+	endif
+
+	if (a<=b) && (a<=40)
+		println("All is Well")
+	else
+		fail("Failed <= test")
+	endif
+
+	if a!=b
+		println("All is Well")
+	else
+		fail("Failed != integer test")
+	endif
+
+	s="test"
+
+	if s=="test"
+		println("All is Well")
+	else
+		fail("Failed string ==")
+	endif
+
+	if s!="fish"
+		println("All is Well")
+	else
+		fail("Failed string !=")
+	endif
+
+endfunc
+
+comptest()

@@ -33,12 +33,9 @@ public class FScript implements FSExtension {
     protected LineLoader code;
     private Vector extensions;
 
-    /**
-     * Constructor
-     */
     public FScript() {
         parser = new Parser(this);
-        code = new LineLoader(); //LineLoader();
+        code = new LineLoader();
         parser.setCode(code);
         extensions = new Vector();
     }

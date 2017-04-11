@@ -1,0 +1,20 @@
+#Testing recursive calls...
+
+func rectestx(int a)
+	if a<20
+		return rectestx(a+1)
+	else
+		return a
+	endif
+endfunc
+
+func rectest()
+	#initiate a recursive call which should return 20
+	if rectestx(1)==20
+		println("All is Well")
+	else
+		fail("Recursion test failed")
+	endif
+endfunc
+
+rectest()

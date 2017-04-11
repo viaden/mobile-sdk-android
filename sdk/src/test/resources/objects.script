@@ -1,8 +1,4 @@
-#A short script to give some idea what can be done with the 
-#new java object access feature.
-#To run: 'java FSTest objects.script'
-#
-#Will run on java 1.2 and above as it accesses HashMaps..
+#A short script to give some idea what can be done with the new java object access feature.
 
 string test
 

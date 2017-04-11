@@ -17,11 +17,6 @@ public class FuncEntry {
     }
 
     public String toString() {
-        String s = new String();
-        s = startLine + " ";
-        s = s + endLine + " ";
-        s = s + paramNames + " ";
-        s = s + params;
-        return s;
+        return startLine + " " + endLine + " " + paramNames + " " + params;
     }
 }

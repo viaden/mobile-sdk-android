@@ -26,6 +26,4 @@ public abstract class BasicExtension implements FSExtension {
     public void setVar(final String name, final Object index, final Object value) throws FSException {
         throw new FSUnsupportedException(name);
     }
-
 }
-

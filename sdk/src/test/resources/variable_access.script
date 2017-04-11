@@ -1,0 +1,32 @@
+#Test for Local/Global access
+
+func vartest()
+	string t
+	t="Local var"
+	if t=="Local var"
+		println( "All is Well")
+	else
+		fail("Local access failed")
+	endif
+
+	if s=="Global var"
+		println("All is Well")
+	else
+		fail("Global access failed")
+	endif
+
+
+	s="Local too"
+
+	if s=="Local too"
+		println("All is Well")
+	else
+		fail("Scope test failed")
+	endif
+
+endfunc
+
+string s
+s="Global var"
+println("Testing variable access...")
+vartest()

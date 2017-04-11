@@ -347,9 +347,7 @@ class Parser {
 
             //Check params and def match
             if (fDef.paramNames.size() != params.size()) {
-                parseError("Expected " +
-                        fDef.paramNames.size() +
-                        " parameters, Found " + params.size());
+                parseError("Expected " + fDef.paramNames.size() + " parameters, Found " + params.size());
             }
 
             //Create a new parser instance to handle call
@@ -405,12 +403,9 @@ class Parser {
     private Object parseNewObject() throws IOException, FSException {
         final Vector params = new Vector(4);
         final Object val;
-        val = null;
-
         getNextToken();
         final String name = (String) tok.value;
         getNextToken();
-
         //Set up the parameters
         do {
             getNextToken();
@@ -437,11 +432,10 @@ class Parser {
             } else {
                 c = getClass().forName(className);
             }
-            if (c == null)
+            if (c == null) {
                 return null;
-
+            }
             final Object[] o = new Object[params.size()];
-
             for (int i = 0; i < o.length; i++) {
                 o[i] = params.elementAt(i);
             }
@@ -471,34 +465,32 @@ class Parser {
             } else {
                 c = target.getClass();
             }
-            if (c == null)
+            if (c == null) {
                 return;
+            }
             final java.lang.reflect.Field f = c.getField(fieldName);
-            if (f == null)
+            if (f == null) {
                 return;
-            if (target == null)
+            }
+            if (target == null) {
                 f.set(c, value);
-            else
+            } else {
                 f.set(target, value);
+            }
         } catch (final Exception e) {
             //System.out.println("ERROR");
             //e.printStackTrace();
         }
-        return;
     }
 
     private Object evalNativeField(final Object target, final String className, final String fieldName) throws FSException {
         try {
             final Class c;
-
             if (target == null) {
-
                 if (!host.javaObjects) {
                     parseError("Java object access is prohibited");
                 }
-
                 final ClassLoader loader = getClass().getClassLoader();
-
                 if (loader != null) {
                     c = loader.loadClass(className);
                 } else {
@@ -507,43 +499,31 @@ class Parser {
             } else {
                 c = target.getClass();
             }
-
-            if (c == null)
+            if (c == null) {
                 return null;
-
+            }
             final java.lang.reflect.Field f = c.getField(fieldName);
-
-            if (f == null)
+            if (f == null) {
                 return null;
-
-            if (target == null)
-                return f.get(c);
-            else
-                return f.get(target);
+            }
+            return target == null ? f.get(c) : f.get(target);
         } catch (final FSException e) {
             //just re-throw these
             throw e;
         } catch (final Exception e) {
             parseError("Error accessing field " + e.getMessage());
         }
-
         return null;
     }
 
-    private Object evalNativeMethod(final Object target, final String className,
-                                    final String methodeName, final Vector params) throws FSException {
-
+    private Object evalNativeMethod(final Object target, final String className, final String methodeName, final Vector params) throws FSException {
         try {
             final Class c;
-
             if (target == null) {
-
                 if (!host.javaObjects) {
                     parseError("Java object access is prohibited");
                 }
-
                 final ClassLoader loader = getClass().getClassLoader();
-
                 if (loader != null) {
                     c = loader.loadClass(className);
                 } else {
@@ -552,23 +532,17 @@ class Parser {
             } else {
                 c = target.getClass();
             }
-
-            if (c == null)
+            if (c == null) {
                 return null;
-
+            }
             final Object[] o = new Object[params.size()];
-
             for (int i = 0; i < o.length; i++) {
                 o[i] = params.elementAt(i);
             }
-
             final java.lang.reflect.Method[] methods = c.getDeclaredMethods();
-
             for (int i = 0; i < methods.length; i++) {
                 if (methods[i].getName().equals(methodeName)) {
                     final Class[] classes = methods[i].getParameterTypes();
-
-
                     try {
                         if (target == null) {
                             if (checkMethods(classes, o)) {
@@ -589,22 +563,18 @@ class Parser {
         } catch (final Exception e) {
             parseError("Error Calling method " + e.getMessage());
         }
-
         return null;
     }
 
     //used by evalNative method to check that parameters of calling
     //object and native method call match
     private boolean checkMethods(final Class[] c, final Object[] o) {
-
         int n;
         final int len;
-
         //easy exit not the same length params
         if (c.length != o.length) {
             return false;
         }
-
         //check that methods have same types
         len = c.length;
         for (n = 0; n < len; n++) {
@@ -612,9 +582,7 @@ class Parser {
                 return false;
             }
         }
-
         return true;
-
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -623,7 +591,6 @@ class Parser {
 
     //handles function definitions
     private void parseFunctionDef() throws IOException, FSException {
-
         final FuncEntry fDef = new FuncEntry();
         Object val;
         String name;
@@ -676,7 +643,6 @@ class Parser {
         }
 
         //now we just skip to the endfunction
-
         while ((tok.ttype != LexAnn.TT_EDEFFUNC) && (tok.ttype != LexAnn.TT_EOF)) {
             getNextToken();
             if (tok.ttype == LexAnn.TT_DEFFUNC)
@@ -687,12 +653,10 @@ class Parser {
         getNextToken();
 
         funcs.put(fName, fDef);
-
     }
 
     //Expression parser
     private Object parseExpr() throws IOException, FSException {
-
         ETreeNode curNode = null;
         boolean end = false;
         final boolean skipTok = false;
@@ -700,12 +664,8 @@ class Parser {
         boolean negate = false; //flag for unary minus
         boolean not = false;//flag for unary not.
         boolean prevOp = true;//flag - true if previous value was an operator
-
-
         while (!end) {
-
             switch (tok.ttype) {
-
                 //the various possible 'values'
                 case LexAnn.TT_INTEGER:
                 case LexAnn.TT_DOUBLE:
@@ -715,15 +675,12 @@ class Parser {
                 case LexAnn.TT_OBJECT:
                 case LexAnn.TT_ARRAY:
                 case LexAnn.TT_DEFOBJECT: {
-
                     if (!prevOp) {
                         parseError("Expected Operator");
                     } else {
-
                         val = null;
                         final ETreeNode node = new ETreeNode();
                         node.type = ETreeNode.E_VAL;
-
                         switch (tok.ttype) {
                             //numbers - just get them
                             case LexAnn.TT_INTEGER: {
@@ -782,8 +739,7 @@ class Parser {
                                 break;
                             }
                             case LexAnn.TT_DEFOBJECT: {
-                                //in this circumstance need to make $var look
-                                //like a 'var'
+                                //in this circumstance need to make $var look like a 'var'
                                 getNextToken();
                                 final String name = getStringValue(tok.value);
                                 if (hasVar(name)) {
@@ -800,9 +756,7 @@ class Parser {
                                 }
                                 break;
                             }
-
                         }
-
                         //unary not
                         if (not) {
                             if (val instanceof Integer) {
@@ -816,7 +770,6 @@ class Parser {
                                 parseError("Type mismatch for !");
                             }
                         }
-
                         //unary minus
                         if (negate) {
                             if (val instanceof Integer) {
@@ -827,32 +780,27 @@ class Parser {
                                 parseError("Type mistmatch for unary -");
                             }
                         }
-
                         node.value = val;
-
                         if (curNode != null) {
                             if (curNode.left == null) {
                                 curNode.left = node;
                                 node.parent = curNode;
                                 curNode = node;
-
                             } else if (curNode.right == null) {
                                 curNode.right = node;
                                 node.parent = curNode;
                                 curNode = node;
-
                             }
                         } else {
                             curNode = node;
                         }
-
                         prevOp = false;
                     }
                     break;
                 }
                 /*opperators - have to be more carefull with these.
                 We build an expresion tree - inserting the nodes at the right
-                points to get a reasonable approximation to correct opperator
+                points to get a reasonable approximation to correct operator
                 precidence*/
                 case LexAnn.TT_LEQ:
                 case LexAnn.TT_LNEQ:
@@ -879,18 +827,12 @@ class Parser {
                             parseError("Expected Expresion");
                         }
                     } else {
-
                         final ETreeNode node = new ETreeNode();
-
                         node.type = ETreeNode.E_OP;
                         node.value = new Integer(tok.ttype);
-
                         if (curNode.parent != null) {
-
                             final int curPrio = getPrio(tok.ttype);
-                            final int parPrio =
-                                    getPrio(((Integer) curNode.parent.value).intValue());
-
+                            final int parPrio = getPrio(((Integer) curNode.parent.value).intValue());
                             if (curPrio <= parPrio) {
                                 //this nodes parent is the current nodes grandparent
                                 node.parent = curNode.parent.parent;
@@ -901,7 +843,6 @@ class Parser {
                                 if (curNode.parent.parent != null) {
                                     curNode.parent.parent.right = node;
                                 }
-
                                 //the current nodes parent is now us (because of above)
                                 curNode.parent = node;
                                 //set the current node.
@@ -931,23 +872,19 @@ class Parser {
                     }
                     break;
                 }
-                case '(':
+                case '(': {
                     //start of an bracketed expresion, recursively call ourself
                     //to get a value
-                {
                     getNextToken();
                     val = parseExpr();
-
                     final ETreeNode node = new ETreeNode();
                     node.value = val;
                     node.type = ETreeNode.E_VAL;
-
                     if (curNode != null) {
                         if (curNode.left == null) {
                             curNode.left = node;
                             node.parent = curNode;
                             curNode = node;
-
                         } else if (curNode.right == null) {
                             curNode.right = node;
                             node.parent = curNode;
@@ -960,17 +897,14 @@ class Parser {
                     prevOp = false;
                     break;
                 }
-
                 default: {
                     end = true;
                 }
-
             }
             if (!end) {
                 tok.nextToken();
             }
         }
-
         //find the top of the tree we just built.
         if (curNode == null) parseError("Missing Expression");
         while (curNode.parent != null) {
@@ -989,14 +923,11 @@ class Parser {
     private Object evalETree(final ETreeNode node) throws FSException {
         final Object lVal;
         final Object rVal;
-
         if (node.type == ETreeNode.E_VAL) {
             return node.value;
         }
-
         lVal = evalETree(node.left);
         rVal = evalETree(node.right);
-
         switch (((Integer) node.value).intValue()) {
             //call the various eval functions
             case LexAnn.TT_PLUS: {
@@ -1045,19 +976,16 @@ class Parser {
                 return evalOr(lVal, rVal);
             }
         }
-
         return null;
     }
 
     //addition
     private Object evalPlus(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Number && rVal instanceof Number) {
             if (lVal instanceof Double || rVal instanceof Double) {
                 return new Double(getDoubleValue(lVal) + getDoubleValue(rVal));
@@ -1071,24 +999,20 @@ class Parser {
 
     //subtraction
     private Object evalMinus(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Double || rVal instanceof Double) {
             return new Double(getDoubleValue(lVal) - getDoubleValue(rVal));
         } else {
             return new Integer(getIntegerValue(lVal) - getIntegerValue(rVal));
         }
-
     }
 
     //multiplication
     private Object evalMult(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
@@ -1099,229 +1023,197 @@ class Parser {
         } else {
             return new Integer(getIntegerValue(lVal) * getIntegerValue(rVal));
         }
-
     }
 
     //modulus %
     private Object evalMod(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         final int i = getIntegerValue(rVal);
-
-        if (i != 0)
+        if (i != 0) {
             return new Integer(getIntegerValue(lVal) % i);
-        else
+        } else {
             return "NaN";
+        }
     }
 
     //>>
     private Object evalRight(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         return new Integer(getIntegerValue(lVal) >> getIntegerValue(rVal));
-
     }
 
     //<<
     private Object evalLeft(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         return new Integer(getIntegerValue(lVal) << getIntegerValue(rVal));
     }
 
     //Logical AND
     private Object evalAnd(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Double || rVal instanceof Double) {
             return (getDoubleValue(lVal) != 0 && getDoubleValue(rVal) != 0) ? new Integer(1) : new Integer(0);
         } else {
             return (getIntegerValue(lVal) != 0 && getIntegerValue(rVal) != 0) ? new Integer(1) : new Integer(0);
         }
-
-
     }
 
     //Logical Or
     private Object evalOr(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Double || rVal instanceof Double) {
             return (getDoubleValue(lVal) != 0 || getDoubleValue(rVal) != 0) ? new Integer(1) : new Integer(0);
         } else {
             return (getIntegerValue(lVal) != 0 || getIntegerValue(rVal) != 0) ? new Integer(1) : new Integer(0);
         }
-
-
     }
 
     //division always use a Double
     private Object evalDiv(final Object lVal, final Object rVal) throws FSException {
-
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Double || rVal instanceof Double) {
             return new Double(getDoubleValue(lVal) / getDoubleValue(rVal));
         } else {
             return new Integer(getIntegerValue(lVal) / getIntegerValue(rVal));
         }
-
     }
 
     //logical equal
     private Object evalEq(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
                 return (getDoubleValue(lVal) == getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
-            } else //compare Integer
-            {
+            } else {
+                //compare Integer
                 return (getIntegerValue(lVal) == getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
             }
-        } else //compare String
-        {
+        } else {
+            //compare String
             return (getStringValue(lVal).equals(getStringValue(rVal))) ? new Integer(1) : new Integer(0);
         }
     }
 
     //<
     private Object evalLs(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
                 return (getDoubleValue(lVal) < getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
-            } else //compare Integer
-            {
+            } else {
+                //compare Integer
                 return (getIntegerValue(lVal) < getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
             }
-        } else //compare String
-        {
+        } else {
+            //compare String
             return (getStringValue(lVal).compareTo(getStringValue(rVal)) < 0) ? new Integer(1) : new Integer(0);
         }
     }
 
     //<=
     private Object evalLse(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
                 return (getDoubleValue(lVal) <= getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
-            } else //compare Integer
-            {
+            } else {
+                //compare Integer
                 return (getIntegerValue(lVal) <= getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
             }
-        } else //compare String
-        {
+        } else {
+            //compare String
             return (getStringValue(lVal).compareTo(getStringValue(rVal)) <= 0) ? new Integer(1) : new Integer(0);
         }
     }
 
     //>
     private Object evalGr(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
                 return (getDoubleValue(lVal) > getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
-            } else //compare Integer
-            {
+            } else {
+                //compare Integer
                 return (getIntegerValue(lVal) > getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
             }
-        } else //compare String
-        {
+        } else {
+            //compare String
             return (getStringValue(lVal).compareTo(getStringValue(rVal)) > 0) ? new Integer(1) : new Integer(0);
         }
     }
 
     //>=
     private Object evalGre(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
                 return (getDoubleValue(lVal) >= getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
-            } else //compare Integer
-            {
+            } else {
+                //compare Integer
                 return (getIntegerValue(lVal) >= getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
             }
-        } else //compare String
-        {
+        } else {
+            //compare String
             return (getStringValue(lVal).compareTo(getStringValue(rVal)) >= 0) ? new Integer(1) : new Integer(0);
         }
     }
 
     //logical inequallity
     private Object evalNEq(final Object lVal, final Object rVal) throws FSException {
-
         if (!host.softType) {
             if (!lVal.getClass().equals(rVal.getClass())) {
                 parseError("Type mismatch");
             }
         }
-
         return (getIntegerValue(evalEq(lVal, rVal)) == 0) ? new Integer(1) : new Integer(0);
     }
 
@@ -1333,7 +1225,6 @@ class Parser {
         final Integer val;
         int depth;
         boolean then = false;
-
 
         getNextToken();
         val = (Integer) parseExpr();
@@ -1356,7 +1247,6 @@ class Parser {
                 then = true;
             }
         }
-
         if (!then) {
             if (val.intValue() != 0) {
                 getNextToken();
@@ -1366,19 +1256,21 @@ class Parser {
                     getNextToken();
                 }
                 if (tok.ttype == LexAnn.TT_ELSE) {
-                    //skip else clause -
-                    //have to do this taking into acount nesting
+                    //skip else clause - have to do this taking into acount nesting
                     depth = 1;
                     do {
                         getNextToken();
-                        if (tok.ttype == LexAnn.TT_IF) depth++;
-                        if (tok.ttype == LexAnn.TT_EOF)
+                        if (tok.ttype == LexAnn.TT_IF) {
+                            depth++;
+                        }
+                        if (tok.ttype == LexAnn.TT_EOF) {
                             parseError("can't find endif");
-                        if (tok.ttype == LexAnn.TT_EIF) depth--;
-
+                        }
+                        if (tok.ttype == LexAnn.TT_EIF) {
+                            depth--;
+                        }
                         //A then could indicate a one line
-                        //if - then construct, then we don't increment
-                        //depth
+                        //if - then construct, then we don't increment depth
                         if (tok.ttype == LexAnn.TT_THEN) {
 
                             getNextToken();
@@ -1408,7 +1300,6 @@ class Parser {
                     //if - then construct, then we don't increment
                     //depth
                     if (tok.ttype == LexAnn.TT_THEN) {
-
                         getNextToken();
                         if (tok.ttype != LexAnn.TT_EOF) {
                             depth--;
@@ -1422,7 +1313,6 @@ class Parser {
                     getNextToken();
                     getNextToken();
                     //run else clause
-
                     while (tok.ttype != LexAnn.TT_EIF) {
                         parseStmt();
                         getNextToken();
@@ -1433,12 +1323,10 @@ class Parser {
                 }
             }
         }
-
     }
 
     private void parseWhile() throws IOException, FSException, RetException {
         //parses the while statement
-
         Integer val;
         final int startLine;
         int endPos;
@@ -1471,21 +1359,14 @@ class Parser {
             if (tok.ttype == LexAnn.TT_EOF)
                 parseError("can't find endwhile");
         } while (depth > 0);
-
         getNextToken();
-
     }
 
-
     private void parseVarDef() throws IOException, FSException {
-
-
         Object val;
         int type = 0;
         String name;
-
         val = null;
-
         if (tok.ttype == LexAnn.TT_DEFINT) {
             type = LexAnn.TT_DEFINT;
         } else if (tok.ttype == LexAnn.TT_DEFSTRING) {
@@ -1497,16 +1378,12 @@ class Parser {
         } else {
             parseError("Expected 'int','string' 'double' or 'object'");
         }
-
-
         do {
             getNextToken();
             if (tok.ttype != LexAnn.TT_WORD) {
                 parseError("Expected identifier,");
             }
-
             name = getStringValue(tok.value);
-
             switch (type) {
                 case LexAnn.TT_DEFINT: {
                     addVar(name, new Integer(0));
@@ -1525,20 +1402,16 @@ class Parser {
                     break;
                 }
             }
-
             getNextToken();
             if (tok.ttype == LexAnn.TT_EQ) {
                 //getNextToken();
                 //setVar(name,parseExpr());
-
                 getNextToken();
-
                 if (tok.ttype == LexAnn.TT_NEW) {
                     val = parseNewObject();
                 } else {
                     val = parseExpr();
                 }
-
                 if (hasVar(name)) {
                     setVar(name, val);
                 } else {
@@ -1553,7 +1426,6 @@ class Parser {
             } else if (tok.ttype != ',' && tok.ttype != LexAnn.TT_EOL) {
                 parseError("Expected ','");
             }
-
         } while (tok.ttype != LexAnn.TT_EOL);
 
     }
@@ -1566,7 +1438,6 @@ class Parser {
         t = tok.toString();
 
         //set up our error block
-
         error[0] = s;
         error[1] = (new Integer(code.getCurLine())).toString();
         error[2] = code.getLine();
@@ -1601,7 +1472,6 @@ class Parser {
     private boolean pComp(final String s) {
         //a compare for tok.sval strings - that avoids the null problem
         final String name = getStringValue(tok.value);
-
         if (name != null) {
             return name.equals(s);
         } else {
@@ -1611,7 +1481,6 @@ class Parser {
 
     //misc token access routines
     private void getNextToken() throws IOException {
-
         if ((tok.ttype == LexAnn.TT_EOL) && (code.getCurLine() < maxLine)) {
             code.setCurLine(code.getCurLine() + 1);
             tok.setString(code.getLine());
@@ -1637,28 +1506,25 @@ class Parser {
         if (value == null) {
             value = new NullObject();
         }
-
         final int pos = name.lastIndexOf('.');
-
         final Object o = vars.get(name);
-
         if (o == null) {
             vars.put(name, value);
-        } else if (o instanceof Double) //cast to double
-        {
+        } else if (o instanceof Double) {
+            //cast to double
             vars.put(name, new Double(getDoubleValue(value)));
-        } else if (o instanceof Number) //cast to int
-        {
+        } else if (o instanceof Number) {
+            //cast to int
             vars.put(name, new Integer(getIntegerValue(value)));
-        } else //cast to string
-            if (o instanceof String) //cast to string
-            {
+        } else {
+            //cast to string
+            if (o instanceof String) {
+                //cast to string
                 vars.put(name, getStringValue(value));
             } else {
                 if (pos > 0) {
                     final String className = name.substring(0, pos);
                     final String fieldName = name.substring(pos + 1, name.length());
-
                     //check if this object already exist into the gvar or var
                     if (vars.containsKey(className)) {
                         setNativeField(vars.get(className),
@@ -1666,20 +1532,19 @@ class Parser {
                     } else if (gVars != null && gVars.containsKey(className)) {
                         setNativeField(gVars.get(className),
                                 className, fieldName, value);
-                    } else //peraphs a static field like java.io.File.pathSeparator
-                    {
+                    } else {
+                        //peraphs a static field like java.io.File.pathSeparator
                         setNativeField(null, className, fieldName, value);
                     }
                 }
                 vars.put(name, value);
             }
+        }
     }
 
     public Object getVar(final String name) throws FSException {
-
         final int pos = name.lastIndexOf('.');
         Object retVal = null;
-
         if (vars.containsKey(name)) {
             retVal = vars.get(name);
         } else {
@@ -1689,42 +1554,32 @@ class Parser {
                 }
             }
         }
-
         //only try for objects if there is nothing found locally
         if (pos > 0 && retVal == null) {
             final String className = name.substring(0, pos);
             final String fieldName = name.substring(pos + 1, name.length());
-
             //check if this object already exist into the gvar or var
             if (vars.containsKey(className)) {
                 retVal = evalNativeField(vars.get(className), className, fieldName);
             } else if (gVars != null && gVars.containsKey(className)) {
                 retVal = evalNativeField(gVars.get(className), className, fieldName);
-            } else //peraphs a static field like java.io.File.pathSeparator
-            {
+            } else {
+                //peraphs a static field like java.io.File.pathSeparator
                 retVal = evalNativeField(null, className, fieldName);
             }
         }
-
         return retVal;
     }
 
     // perform a smart casting
     public void setVar(final String name, Object val) throws FSException {
-
         final boolean set = false;
-
         if (val == null) {
             val = new NullObject();
         }
-
-
         final int pos = name.lastIndexOf('.');
-
-
         Hashtable var = null;
         Object obj = null;
-
         if (vars.containsKey(name)) {
             obj = vars.get(name);
             var = vars;
@@ -1736,7 +1591,6 @@ class Parser {
                 }
             }
         }
-
         // it's usefull to warp any king of Object
         // by this FScript support other type than int double and String
         if (obj == null) {
@@ -1777,7 +1631,6 @@ class Parser {
                 }
             }
         }
-
         if ((pos > 0) && (!set)) {
             final String className = name.substring(0, pos);
             final String fieldName = name.substring(pos + 1, name.length());
@@ -1798,7 +1651,6 @@ class Parser {
     //- end addVar setVar getVar with smart casting support
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-
     public boolean hasVar(final String name) {
         //add support to native field
         if (name.indexOf('.') >= 0)
@@ -1810,7 +1662,6 @@ class Parser {
             return vars.containsKey(name) || gVars.containsKey(name);
         }
     }
-
 }
 
 
