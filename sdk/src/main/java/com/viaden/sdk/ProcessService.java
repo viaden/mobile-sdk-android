@@ -7,6 +7,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.viaden.sdk.script.FSException;
+
+import java.io.IOException;
+
 public class ProcessService extends IntentService {
     @NonNull
     private static final String ACTION_EXECUTE = "com.viaden.sdk.ACTION_PROCESS";
@@ -39,6 +43,12 @@ public class ProcessService extends IntentService {
         if (command == null) {
             return;
         }
-        new Processor(this).process(command);
+        try {
+            new Processor(this).process(command);
+        } catch (IOException | FSException e) {
+            if (Log.isLoggable(BuildConfig.LOG_TAG, Log.ERROR)) {
+                Log.e(BuildConfig.LOG_TAG, e.getMessage(), e);
+            }
+        }
     }
 }

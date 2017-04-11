@@ -10,16 +10,31 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 class Command implements Parcelable {
     @NonNull
     public static final Parcelable.Creator<Command> CREATOR = new ParcelableCreator();
     @NonNull
     final List<Step> steps;
+    @NonNull
+    final Map<String, String> placeholders;
 
-    private Command(@NonNull final List<Step> steps) {
+    private Command(@NonNull final List<Step> steps, @NonNull final Map<String, String> placeholders) {
         this.steps = Collections.unmodifiableList(steps);
+        this.placeholders = Collections.unmodifiableMap(placeholders);
+    }
+
+    private static void writeToParcel(@NonNull final Parcel p, @NonNull final Map<String, String> val) {
+        final Set<Map.Entry<String, String>> entries = val.entrySet();
+        p.writeInt(entries.size());
+        for (final Map.Entry<String, String> entry : entries) {
+            p.writeString(entry.getKey());
+            p.writeString(entry.getValue());
+        }
     }
 
     @Override
@@ -30,6 +45,7 @@ class Command implements Parcelable {
     @Override
     public void writeToParcel(@NonNull final Parcel p, final int flags) {
         p.writeTypedList(steps);
+        writeToParcel(p, placeholders);
     }
 
     @NonNull
@@ -40,6 +56,8 @@ class Command implements Parcelable {
     static class Builder {
         @Nullable
         private Steps.Builder steps;
+        @Nullable
+        private Map<String, String> placeholders;
 
         Builder(@NonNull final JSONObject json) {
             steps = parseSteps(json);
@@ -47,16 +65,29 @@ class Command implements Parcelable {
 
         private Builder(@NonNull final Parcel p) {
             steps = new Steps.Builder(p);
+            placeholders = parsePlaceholders(p);
         }
 
         private Builder(@NonNull final Command origin) {
             steps = new Steps.Builder(origin.steps);
+            placeholders = new HashMap<>(origin.placeholders);
         }
 
         @Nullable
-        private static Steps.Builder parseSteps(final @NonNull JSONObject json) {
+        private static Steps.Builder parseSteps(@NonNull final JSONObject json) {
             final JSONArray value = json.optJSONArray("steps");
             return value == null ? null : new Steps.Builder(value);
+        }
+
+        @NonNull
+        private static Map<String, String> parsePlaceholders(@NonNull final Parcel p) {
+            int count = p.readInt();
+            final HashMap<String, String> map = new HashMap<>(count);
+            while (count > 0) {
+                map.put(p.readString(), p.readString());
+                count--;
+            }
+            return map;
         }
 
         @NonNull
@@ -65,12 +96,21 @@ class Command implements Parcelable {
             return this;
         }
 
-        @Nullable
+        @NonNull
+        Builder setPlaceholders(@Nullable final Map<String, String> placeholders) {
+            this.placeholders = placeholders;
+            return this;
+        }
+
+        @NonNull
         Command build() {
             if (steps == null) {
                 steps = new Steps.Builder();
             }
-            return new Command(steps.build());
+            if (placeholders == null) {
+                placeholders = new HashMap<>();
+            }
+            return new Command(steps.build(), placeholders);
         }
     }
 

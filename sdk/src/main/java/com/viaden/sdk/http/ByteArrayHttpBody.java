@@ -18,7 +18,7 @@ public class ByteArrayHttpBody extends HttpBody {
         this(content.getBytes("UTF-8"), contentType);
     }
 
-    public ByteArrayHttpBody(@NonNull final byte[] content, @NonNull final String contentType) {
+    private ByteArrayHttpBody(@NonNull final byte[] content, @NonNull final String contentType) {
         super(contentType, content.length);
         this.content = content.clone();
         contentInputStream = new ByteArrayInputStream(content);

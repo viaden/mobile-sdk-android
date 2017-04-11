@@ -4,14 +4,12 @@ import android.net.SSLSessionCache;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,9 +29,6 @@ public class HttpClient {
     @NonNull
     private final SSLSocketFactoryWrapper sslSocketFactory;
     private boolean hasExecuted;
-    // There is no need to keep locks for interceptor lists since they will only be changed before we make network request
-    @Nullable
-    private List<NetworkInterceptor> interceptors;
 
     public HttpClient() {
         this(true);
@@ -77,25 +72,57 @@ public class HttpClient {
         if (!hasExecuted) {
             hasExecuted = true;
         }
-        return new NetworkInterceptorChain(0, request, factory).proceed(request, factory);
-    }
+        // No more interceptors. Do HTTP.
+        HttpURLConnection connection = null;
+        InputStream stream = null;
+        try {
+            connection = buildConnection(request);
 
-    public void addInterceptor(@NonNull final NetworkInterceptor interceptor) {
-        // If we do not have the restriction, we may have read/write conflict on the interceptor list
-        // and need to add lock to protect it. If in the future we need to add interceptor after
-        // HttpClient start to execute, it is safe to remove this check and add lock.
-        if (hasExecuted) {
-            throw new IllegalStateException("Can't only be invoked before HttpClient execute any request");
+            // Start network connection and write data to server if possible
+            final HttpBody body = request.getBody();
+            if (body != null) {
+                final OutputStream outputStream = connection.getOutputStream();
+                body.writeTo(outputStream);
+                outputStream.flush();
+                outputStream.close();
+            }
+            final int statusCode = connection.getResponseCode();
+
+            // Headers
+            final Map<String, String> headers = new HashMap<>();
+            for (final Map.Entry<String, List<String>> entry : connection.getHeaderFields().entrySet()) {
+                // The status code's key from header entry is always null(like null=HTTP/1.1 200 OK), since we
+                // have already had statusCode in HttpResponse, we just ignore this header entry.
+                if (entry.getKey() != null && !entry.getValue().isEmpty()) {
+                    headers.put(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().get(0));
+                }
+            }
+
+            // Content
+            if (statusCode < 400) {
+                stream = connection.getInputStream();
+            } else {
+                stream = connection.getErrorStream();
+            }
+
+            return new HttpResponse.Builder()
+                    .setResponseContent(factory.create(statusCode, stream))
+                    .setStatusCode(statusCode)
+                    .setTotalSize(connection.getContentLength())
+                    .setReasonPhrase(connection.getResponseMessage())
+                    .setHeaders(headers)
+                    .setContentType(connection.getContentType())
+                    .build();
+        } finally {
+            IOUtils.closeQuietly(stream);
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
-        if (interceptors == null) {
-            interceptors = new ArrayList<>();
-        }
-        interceptors.add(interceptor);
     }
 
     @NonNull
-    @VisibleForTesting
-    HttpURLConnection buildConnection(@NonNull final HttpRequest request) throws IOException {
+    private HttpURLConnection buildConnection(@NonNull final HttpRequest request) throws IOException {
         final URL url = new URL(request.getUrl());
 
         final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -128,88 +155,5 @@ public class HttpClient {
             connection.setDoOutput(true);
         }
         return connection;
-    }
-
-    private class NetworkInterceptorChain implements NetworkInterceptor.Chain {
-        private final int index;
-        @NonNull
-        private final HttpRequest request;
-        @NonNull
-        private final ResponseContentFactory<?> factory;
-
-        NetworkInterceptorChain(final int index, @NonNull final HttpRequest request, @NonNull final ResponseContentFactory<?> factory) {
-            this.index = index;
-            this.request = request;
-            this.factory = factory;
-        }
-
-        @NonNull
-        @Override
-        public HttpRequest getRequest() {
-            return request;
-        }
-
-        @NonNull
-        public ResponseContentFactory<?> getFactory() {
-            return factory;
-        }
-
-        @NonNull
-        @Override
-        public HttpResponse proceed(@NonNull final HttpRequest request, @NonNull final ResponseContentFactory<?> factory) throws IOException {
-            if (interceptors != null && index < interceptors.size()) {
-                // There's another internal interceptor in the chain. Call that.
-                final NetworkInterceptor.Chain chain = new NetworkInterceptorChain(index + 1, request, factory);
-                return interceptors.get(index).intercept(chain);
-            }
-
-            // No more interceptors. Do HTTP.
-            HttpURLConnection connection = null;
-            InputStream stream = null;
-            try {
-                connection = buildConnection(request);
-
-                // Start network connection and write data to server if possible
-                final HttpBody body = request.getBody();
-                if (body != null) {
-                    final OutputStream outputStream = connection.getOutputStream();
-                    body.writeTo(outputStream);
-                    outputStream.flush();
-                    outputStream.close();
-                }
-                final int statusCode = connection.getResponseCode();
-
-                // Headers
-                final Map<String, String> headers = new HashMap<>();
-                for (final Map.Entry<String, List<String>> entry : connection.getHeaderFields().entrySet()) {
-                    // The status code's key from header entry is always null(like null=HTTP/1.1 200 OK), since we
-                    // have already had statusCode in HttpResponse, we just ignore this header entry.
-                    if (entry.getKey() != null && !entry.getValue().isEmpty()) {
-                        headers.put(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().get(0));
-                    }
-                }
-
-                // Content
-                if (statusCode < 400) {
-                    stream = connection.getInputStream();
-                } else {
-                    stream = connection.getErrorStream();
-                }
-
-                return new HttpResponse.Builder()
-                        .setResponseContent(factory.create(statusCode, stream))
-                        .setStatusCode(statusCode)
-                        .setTotalSize(connection.getContentLength())
-                        .setReasonPhrase(connection.getResponseMessage())
-                        .setHeaders(headers)
-                        .setContentType(connection.getContentType())
-                        .build();
-            } finally {
-                IOUtils.closeQuietly(stream);
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-        }
     }
 }

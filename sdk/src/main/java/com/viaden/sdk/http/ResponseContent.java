@@ -2,7 +2,7 @@ package com.viaden.sdk.http;
 
 import android.support.annotation.Nullable;
 
-interface ResponseContent<T> {
+public interface ResponseContent<T> {
     /**
      * Returns the response content of the {@code HttpResponse}.
      */

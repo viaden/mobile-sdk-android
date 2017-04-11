@@ -5,7 +5,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 class Placeholder {
     @NonNull
@@ -15,9 +17,16 @@ class Placeholder {
     );
     @NonNull
     private final Context context;
+    @NonNull
+    private Map<String, String> placeholders;
 
     Placeholder(@NonNull final Context context) {
         this.context = context;
+        placeholders = new HashMap<>();
+    }
+
+    void setPlaceholders(@NonNull final Map<String, String> placeholders) {
+        this.placeholders = placeholders;
     }
 
     @NonNull
@@ -42,7 +51,7 @@ class Placeholder {
             case DeviceIdTypeRetriever.KEY:
                 return DeviceIdTypeRetriever.get(context);
             default:
-                return null;
+                return placeholders.get(key);
         }
     }
 }

@@ -23,14 +23,17 @@ class Step implements Parcelable {
     final Uri url;
     @NonNull
     final JSONObject body;
+    @Nullable
+    final String responseScript;
     final long delayMillis;
 
     private Step(@NonNull final Headers headers, @NonNull final HttpMethod httpMethod, @NonNull final Uri url, @NonNull final JSONObject body,
-                 final long delayMillis) {
+                 @Nullable final String responseScript, final long delayMillis) {
         this.headers = headers;
         this.httpMethod = httpMethod;
         this.url = url;
         this.body = body;
+        this.responseScript = responseScript;
         this.delayMillis = delayMillis;
     }
 
@@ -50,6 +53,12 @@ class Step implements Parcelable {
         p.writeString(httpMethod.name());
         p.writeParcelable(url, flags);
         p.writeString(body.toString());
+        if (responseScript == null) {
+            p.writeInt(0);
+        } else {
+            p.writeInt(1);
+            p.writeString(responseScript);
+        }
         p.writeLong(this.delayMillis);
     }
 
@@ -63,6 +72,8 @@ class Step implements Parcelable {
         @Nullable
         private JSONObject body;
         @Nullable
+        private String responseScript;
+        @Nullable
         private Long delayMillis;
 
         Builder(@NonNull final JSONObject json) {
@@ -70,6 +81,7 @@ class Step implements Parcelable {
             httpMethod = parseHttpMethod(json);
             url = parseUrl(json);
             body = json.optJSONObject("body");
+            responseScript = json.optString("responseScript");
             delayMillis = json.optLong("delayMillis");
         }
 
@@ -78,6 +90,7 @@ class Step implements Parcelable {
             this.httpMethod = HttpMethod.parse(p.readString());
             this.url = Uri.CREATOR.createFromParcel(p);
             this.body = parseJsonObject(p);
+            this.responseScript = p.readInt() == 0 ? null : p.readString();
             this.delayMillis = p.readLong();
         }
 
@@ -86,6 +99,7 @@ class Step implements Parcelable {
             httpMethod = origin.httpMethod;
             url = origin.url;
             body = origin.body;
+            responseScript = origin.responseScript;
             delayMillis = origin.delayMillis;
         }
 
@@ -133,7 +147,7 @@ class Step implements Parcelable {
             if (delayMillis == null || delayMillis < 0) {
                 delayMillis = 0L;
             }
-            return new Step(headers.build(), httpMethod, url, body, delayMillis);
+            return new Step(headers.build(), httpMethod, url, body, responseScript, delayMillis);
         }
     }
 

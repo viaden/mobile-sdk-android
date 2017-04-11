@@ -1,0 +1,8 @@
+{
+  "status": "OK",
+  "endpoint": "https://api-server-22.moneytapp.com/do/",
+  "handshake": {
+    "key": "6Y1z7Be5gxL3anMwqec9AEcobLGh7L",
+    "ttl": 1800
+  }
+}

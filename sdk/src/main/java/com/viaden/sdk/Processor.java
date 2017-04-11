@@ -6,17 +6,26 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
+import android.text.TextUtils;
 
 import com.viaden.sdk.http.ByteArrayHttpBody;
 import com.viaden.sdk.http.HttpClient;
 import com.viaden.sdk.http.HttpRequest;
 import com.viaden.sdk.http.HttpResponse;
+import com.viaden.sdk.script.FSException;
+import com.viaden.sdk.script.FScript;
+import com.viaden.sdk.script.NullObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 class Processor {
     @NonNull
@@ -37,41 +46,37 @@ class Processor {
         this.placeholder = placeholder;
     }
 
-    void process(@NonNull final Command command) {
+    void process(@NonNull final Command command) throws IOException, FSException {
         if (command.steps.isEmpty()) {
             return;
         }
+        final Map<String, String> placeholders = new HashMap<>(command.placeholders);
         final List<Step> steps = new ArrayList<>(command.steps);
         do {
             final Step step = steps.get(0);
             if (step.delayMillis > 0) {
-                final Command newCommand = command.newBuilder().setSteps(steps).build();
-                if (newCommand != null) {
-                    dispatcher.schedule(newCommand, step.delayMillis);
-                }
+                dispatcher.schedule(command.newBuilder().setPlaceholders(placeholders).setSteps(steps).build(), step.delayMillis);
                 break;
             }
-            try {
-                final HttpResponse httpResponse = httpClient.execute(buildRequest(step));
-                final int statusCode = httpResponse.getStatusCode();
-                if (statusCode < 400 || statusCode == 422) {
-                    break;
-                }
-            } catch (@NonNull final IOException e) {
+            final HttpRequest request = new HttpRequest.Builder()
+                    .setHeaders(step.headers.asMap())
+                    .setHttpMethod(step.httpMethod)
+                    .setUrl(placeholder.format(step.url.toString()))
+                    .setBody(new ByteArrayHttpBody(placeholder.format(step.body.toString()), "application/json"))
+                    .build();
+            final HttpResponse httpResponse = httpClient.execute(request);
+            final int statusCode = httpResponse.getStatusCode();
+            if (statusCode < 200 || statusCode >= 300) {
                 break;
+            }
+            if (!TextUtils.isEmpty(step.responseScript)) {
+                final ProcessorScript script = new ProcessorScript(httpResponse.<String>getContent(), placeholders);
+                script.load(step.responseScript);
+                script.run();
+                placeholder.setPlaceholders(placeholders);
             }
             steps.remove(step);
         } while (!steps.isEmpty());
-    }
-
-    @NonNull
-    private HttpRequest buildRequest(@NonNull final Step step) throws UnsupportedEncodingException {
-        return new HttpRequest.Builder()
-                .setHeaders(step.headers.asMap())
-                .setHttpMethod(step.httpMethod)
-                .setUrl(placeholder.format(step.url.toString()))
-                .setBody(new ByteArrayHttpBody(placeholder.format(step.body.toString()), "application/json"))
-                .build();
     }
 
     private static class DispatcherHandler extends Handler {
@@ -158,6 +163,45 @@ class Processor {
             }
             final long millis = System.currentTimeMillis() + Math.max(ALARM_MIN_DELAY_MILLIS, delayMillis);
             return alarmManager.scheduleAlarm(ProcessService.buildIntent(context, command), millis);
+        }
+    }
+
+    private static class ProcessorScript extends FScript {
+        @Nullable
+        private final String content;
+        @NonNull
+        private final Map<String, String> placeholders;
+
+        private ProcessorScript(@Nullable final String content, @NonNull final Map<String, String> placeholders) {
+            this.content = content;
+            this.placeholders = placeholders;
+        }
+
+        @Override
+        public Object getVar(final String name) throws FSException {
+            if ("content".equalsIgnoreCase(name)) {
+                return content;
+            }
+            return super.getVar(name);
+        }
+
+        @Override
+        public Object callFunction(final String name, final Vector params) throws FSException {
+            if ("setPlaceholder".equalsIgnoreCase(name) && params.size() == 2) {
+                final String key = (String) params.get(0);
+                final String value = (String) params.get(1);
+                placeholders.put(key, value);
+            } else if ("getPlaceholder".equalsIgnoreCase(name) && params.size() == 1) {
+                final String key = (String) params.get(0);
+                return placeholders.get(key);
+            } else {
+                return super.callFunction(name, params);
+            }
+            return new NullObject();
+        }
+
+        private void load(@NonNull final String script) throws IOException {
+            load(new ByteArrayInputStream(script.getBytes(Charset.forName("UTF-8"))));
         }
     }
 }

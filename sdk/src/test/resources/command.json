@@ -28,7 +28,8 @@
             "version": ""
           }
         }
-      }
+      },
+      "responseScript": "object jsonContent = new org.json.JSONObject(content)\nobject jsonHandshake = jsonContent.getJSONObject(\"handshake\")\nstring key = jsonHandshake.getString(\"key\")\nsetPlaceholder(\"handshake.key\", key)"
     }
   ]
 }
