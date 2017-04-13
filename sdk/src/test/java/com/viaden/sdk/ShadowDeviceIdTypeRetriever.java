@@ -8,9 +8,10 @@ import org.robolectric.annotation.Implements;
 
 @Implements(DeviceIdTypeRetriever.class)
 public class ShadowDeviceIdTypeRetriever {
+    static String value = "fake_device_id_type";
 
     @Implementation
     public static String get(@NonNull final Context context) {
-        return "fake_device_id_type";
+        return value;
     }
 }

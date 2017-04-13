@@ -11,7 +11,7 @@
         "inventory": {
           "device": {
             "id": "%{device.id.value}",
-            "idType": "%{device.id.type}",
+            "idType": "%{device.id.type.ampiri}",
             "platform": "ANDROID",
             "vendor": "",
             "model": "",
@@ -29,7 +29,8 @@
           }
         }
       },
-      "responseScript": "object jsonContent = new org.json.JSONObject(content)\nobject jsonHandshake = jsonContent.getJSONObject(\"handshake\")\nstring key = jsonHandshake.getString(\"key\")\nsetPlaceholder(\"handshake.key\", key)"
+      "requestScript": "string t = get(\"device.id.type\")\nif t==\"ADVERTISING_ID\" then t = \"GAID\" endif\nset(\"device.id.type.ampiri\", t)",
+      "responseScript": "object jc = new org.json.JSONObject(content)\nobject jh = jc.getJSONObject(\"handshake\")\nstring key = jh.getString(\"key\")\nset(\"handshake.key\", key)"
     }
   ]
 }

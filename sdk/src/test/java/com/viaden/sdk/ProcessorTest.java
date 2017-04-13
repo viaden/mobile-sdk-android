@@ -21,6 +21,7 @@ import java.util.Map;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -55,6 +56,7 @@ public class ProcessorTest {
 
     @Test
     public void process() throws Exception {
+        ShadowDeviceIdTypeRetriever.value = "ADVERTISING_ID";
         when(httpResponse.getStatusCode()).thenReturn(200);
         when(httpResponse.getContent()).thenReturn(Resources.asString("response.json"));
         final Command command = new Command.Builder(new JSONObject(Resources.asString("command.json"))).build();
@@ -62,7 +64,7 @@ public class ProcessorTest {
         assertThat(command).isNotNull();
         subject.process(command);
         verify(httpClient).execute(httpRequestCaptor.capture());
-        verify(placeholder).setPlaceholders(mapCaptor.capture());
+        verify(placeholder, times(3)).setPlaceholders(mapCaptor.capture());
 
         final HttpRequest httpRequest = httpRequestCaptor.getValue();
         assertThat(httpRequest).isNotNull();

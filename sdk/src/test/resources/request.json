@@ -6,7 +6,7 @@
   "inventory": {
     "device": {
       "id": "fake_device_id_value",
-      "idType": "fake_device_id_type",
+      "idType": "GAID",
       "platform": "ANDROID",
       "vendor": "",
       "model": "",

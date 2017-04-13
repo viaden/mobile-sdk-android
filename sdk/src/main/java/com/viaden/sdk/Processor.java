@@ -22,9 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 
 class Processor {
@@ -34,6 +33,8 @@ class Processor {
     private final Dispatcher dispatcher;
     @NonNull
     private final Placeholder placeholder;
+    @NonNull
+    private final ProcessorScript script;
 
     Processor(@NonNull final Context context) {
         this(new HttpClient(), Dispatcher.from(context), new Placeholder(context));
@@ -41,22 +42,31 @@ class Processor {
 
     @VisibleForTesting
     Processor(@NonNull final HttpClient httpClient, @NonNull final Dispatcher dispatcher, @NonNull final Placeholder placeholder) {
+        this(httpClient, dispatcher, placeholder, new ProcessorScript(placeholder));
+    }
+
+    private Processor(@NonNull final HttpClient httpClient, @NonNull final Dispatcher dispatcher, @NonNull final Placeholder placeholder,
+                      @NonNull final ProcessorScript script) {
         this.httpClient = httpClient;
         this.dispatcher = dispatcher;
         this.placeholder = placeholder;
+        this.script = script;
     }
 
     void process(@NonNull final Command command) throws IOException, FSException {
         if (command.steps.isEmpty()) {
             return;
         }
-        final Map<String, String> placeholders = new HashMap<>(command.placeholders);
+        placeholder.setPlaceholders(command.placeholders);
         final List<Step> steps = new ArrayList<>(command.steps);
         do {
             final Step step = steps.get(0);
             if (step.delayMillis > 0) {
-                dispatcher.schedule(command.newBuilder().setPlaceholders(placeholders).setSteps(steps).build(), step.delayMillis);
+                dispatcher.schedule(command.newBuilder().setPlaceholders(placeholder.getPlaceholders()).setSteps(steps).build(), step.delayMillis);
                 break;
+            }
+            if (!TextUtils.isEmpty(step.requestScript)) {
+                script.run(step.requestScript, null);
             }
             final HttpRequest request = new HttpRequest.Builder()
                     .setHeaders(step.headers.asMap())
@@ -70,10 +80,7 @@ class Processor {
                 break;
             }
             if (!TextUtils.isEmpty(step.responseScript)) {
-                final ProcessorScript script = new ProcessorScript(httpResponse.<String>getContent(), placeholders);
-                script.load(step.responseScript);
-                script.run();
-                placeholder.setPlaceholders(placeholders);
+                script.run(step.responseScript, httpResponse.<String>getContent());
             }
             steps.remove(step);
         } while (!steps.isEmpty());
@@ -167,41 +174,43 @@ class Processor {
     }
 
     private static class ProcessorScript extends FScript {
-        @Nullable
-        private final String content;
         @NonNull
-        private final Map<String, String> placeholders;
+        private final Placeholder placeholder;
+        @Nullable
+        private String content;
 
-        private ProcessorScript(@Nullable final String content, @NonNull final Map<String, String> placeholders) {
-            this.content = content;
-            this.placeholders = placeholders;
+        private ProcessorScript(@NonNull Placeholder placeholder) {
+            this.placeholder = placeholder;
         }
 
         @Override
         public Object getVar(final String name) throws FSException {
             if ("content".equalsIgnoreCase(name)) {
-                return content;
+                return content == null ? "" : content;
             }
             return super.getVar(name);
         }
 
         @Override
         public Object callFunction(final String name, final Vector params) throws FSException {
-            if ("setPlaceholder".equalsIgnoreCase(name) && params.size() == 2) {
+            if ("set".equalsIgnoreCase(name) && params.size() == 2) {
                 final String key = (String) params.get(0);
                 final String value = (String) params.get(1);
-                placeholders.put(key, value);
-            } else if ("getPlaceholder".equalsIgnoreCase(name) && params.size() == 1) {
+                placeholder.setPlaceholders(Collections.singletonMap(key, value));
+            } else if ("get".equalsIgnoreCase(name) && params.size() == 1) {
                 final String key = (String) params.get(0);
-                return placeholders.get(key);
+                return placeholder.getPlaceholder(key);
             } else {
                 return super.callFunction(name, params);
             }
             return new NullObject();
         }
 
-        private void load(@NonNull final String script) throws IOException {
+        private void run(@NonNull final String script, @Nullable final String content) throws IOException, FSException {
+            this.content = content;
+            reset();
             load(new ByteArrayInputStream(script.getBytes(Charset.forName("UTF-8"))));
+            run();
         }
     }
 }

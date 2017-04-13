@@ -29,7 +29,7 @@ func iftest()
 	endif
 
 	if s==2468
-		fail("If test (single line2 failed"
+		fail("If test (single line2 failed")
 	endif
 endfunc
 

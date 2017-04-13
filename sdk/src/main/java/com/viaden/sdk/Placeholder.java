@@ -4,54 +4,86 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 class Placeholder {
     @NonNull
-    private final static List<String> KEYS = Arrays.asList(
-            DeviceIdValueRetriever.KEY,
-            DeviceIdTypeRetriever.KEY
-    );
-    @NonNull
     private final Context context;
     @NonNull
-    private Map<String, String> placeholders;
+    private final MergePlaceholders placeholders;
 
     Placeholder(@NonNull final Context context) {
         this.context = context;
-        placeholders = new HashMap<>();
-    }
-
-    void setPlaceholders(@NonNull final Map<String, String> placeholders) {
-        this.placeholders = placeholders;
+        placeholders = new MergePlaceholders();
     }
 
     @NonNull
     String format(@NonNull final String template) {
         final StringBuilder builder = new StringBuilder(template);
-        for (String key : KEYS) {
+        final List<String> keys = new ArrayList<>(placeholders.keys);
+        for (String key : keys) {
             final String pattern = "%{" + key + "}";
             int start;
             while ((start = builder.indexOf(pattern)) != -1) {
-                final String value = getValue(key);
-                builder.replace(start, start + pattern.length(), value);
+                builder.replace(start, start + pattern.length(), getPlaceholder(key));
             }
         }
         return builder.toString();
     }
 
-    @Nullable
-    private String getValue(@NonNull final String key) {
-        switch (key) {
-            case DeviceIdValueRetriever.KEY:
-                return DeviceIdValueRetriever.get(context);
-            case DeviceIdTypeRetriever.KEY:
-                return DeviceIdTypeRetriever.get(context);
-            default:
-                return placeholders.get(key);
+    @NonNull
+    String getPlaceholder(@NonNull final String key) {
+        if (!placeholders.containsKey(key)) {
+            placeholders.put(key, Platform.get(context, key));
+        }
+        final String value = placeholders.get(key);
+        return value == null ? "" : value;
+    }
+
+    @NonNull
+    Map<String, String> getPlaceholders() {
+        return placeholders.map;
+    }
+
+    void setPlaceholders(@NonNull final Map<String, String> placeholders) {
+        this.placeholders.put(placeholders);
+    }
+
+    private static class MergePlaceholders {
+        @NonNull
+        private final Map<String, String> map;
+        @NonNull
+        private final Set<String> keys;
+
+        private MergePlaceholders() {
+            map = new HashMap<>();
+            keys = new HashSet<>(Platform.KEYS);
+        }
+
+        private boolean containsKey(@NonNull final String key) {
+            return map.containsKey(key);
+        }
+
+        @Nullable
+        private String get(@NonNull final String key) {
+            return map.get(key);
+        }
+
+        private void put(@NonNull final String key, @Nullable final String value) {
+            put(Collections.singletonMap(key, value));
+        }
+
+        private void put(@NonNull final Map<String, String> placeholders) {
+            this.map.putAll(placeholders);
+            keys.clear();
+            keys.addAll(Platform.KEYS);
+            keys.addAll(map.keySet());
         }
     }
 }

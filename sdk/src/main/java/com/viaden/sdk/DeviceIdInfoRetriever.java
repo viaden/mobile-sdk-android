@@ -75,7 +75,7 @@ abstract class DeviceIdInfoRetriever extends PrefsStorage {
 
     interface Types {
         String ANDROID_ID = "ANDROID_ID";
-        String ADVERTISING_ID = "GAID";
+        String ADVERTISING_ID = "ADVERTISING_ID";
         String INTERNAL_ID = "INTERNAL_ID";
     }
 
