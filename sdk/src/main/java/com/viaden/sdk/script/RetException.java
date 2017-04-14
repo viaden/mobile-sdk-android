@@ -1,4 +1,4 @@
 package com.viaden.sdk.script;
 
-public class RetException extends Exception {
+class RetException extends Exception {
 }

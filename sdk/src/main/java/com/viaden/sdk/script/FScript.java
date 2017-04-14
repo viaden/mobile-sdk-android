@@ -7,19 +7,20 @@ import java.io.Reader;
 import java.util.Vector;
 
 public class FScript implements FSExtension {
+    protected LineLoader code;
     /**
      * If true then an attempt is made to cast varaibles
      * of dissimilar types for expressions/assignments.
      * If false an FSException occurs if dissimilar types
      * are used (e.g int + string). Defaults to false
      **/
-    public boolean softType = false;
+    boolean softType = false;
     /**
      * If true there is no need to define variables before use.
      * The default behaviour (preDefineVar=true) is to throw
      * an FSException in this situation
      **/
-    public boolean preDefineVar = true;
+    boolean preDefineVar = true;
     /**
      * If this variable is true (the default) it is possible to
      * to create java objects within FScript - it is also
@@ -28,9 +29,8 @@ public class FScript implements FSExtension {
      * be accessed - however objects returned by extensions/subclasses
      * are still available
      **/
-    public boolean javaObjects = true;
-    protected Parser parser;
-    protected LineLoader code;
+    boolean javaObjects = true;
+    private Parser parser;
     private Vector extensions;
 
     public FScript() {
@@ -45,7 +45,7 @@ public class FScript implements FSExtension {
      *
      * @param is, the input stream
      */
-    public void load(final InputStream is) throws IOException {
+    protected void load(final InputStream is) throws IOException {
         code.load(new InputStreamReader(is));
     }
 
@@ -104,7 +104,7 @@ public class FScript implements FSExtension {
      * @return any return value of the script's execution (will be one of
      * FScript's supported type objects, Integer,String,Double)
      */
-    public Object run() throws IOException, FSException {
+    protected Object run() throws IOException, FSException {
         //reset the internal variable state
         parser.reset();
         return parser.parse(0, code.lineCount() - 1);
@@ -113,7 +113,7 @@ public class FScript implements FSExtension {
     /**
      * Resets the internal code store
      */
-    public void reset() {
+    protected void reset() {
         code.reset();
         parser.reset();
     }

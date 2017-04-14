@@ -2,7 +2,7 @@ package com.viaden.sdk.script;
 
 import java.util.Vector;
 
-public interface FSExtension {
+interface FSExtension {
 
     /**
      * <p>getVar is called whenever a variable is read in FScript that has

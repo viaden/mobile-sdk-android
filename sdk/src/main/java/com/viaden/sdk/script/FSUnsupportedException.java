@@ -1,8 +1,6 @@
 package com.viaden.sdk.script;
 
-public class FSUnsupportedException extends FSException {
-    public FSUnsupportedException() {
-    }
+class FSUnsupportedException extends FSException {
 
     /**
      * Exception specifically used to indicate that extensions/subclasses
@@ -10,7 +8,7 @@ public class FSUnsupportedException extends FSException {
      *
      * @param name the name of function/variable not supported
      **/
-    public FSUnsupportedException(final String name) {
+    FSUnsupportedException(final String name) {
         super("Unrecognized External: " + name);
     }
 }

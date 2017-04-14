@@ -3,81 +3,70 @@ package com.viaden.sdk.script;
 import java.io.IOException;
 
 final class LexAnn {
-
     //general
-    public static final int TT_WORD = 9000;
-    public static final int TT_INTEGER = 9100;
-    public static final int TT_DOUBLE = 9150;
-    public static final int TT_EOF = 9200; //never set by this class
-    public static final int TT_EOL = 9300;
-    public static final int TT_STRING = 9500;
-    public static final int TT_FUNC = 9600;
-    public static final int TT_ARRAY = 9650;
-    public static final int TT_OBJECT = 9660; //handle any king of object NOT CURRENTLY USED
+    static final int TT_WORD = 9000;
+    static final int TT_INTEGER = 9100;
+    static final int TT_DOUBLE = 9150;
+    static final int TT_EOF = 9200; //never set by this class
+    static final int TT_EOL = 9300;
+    static final int TT_STRING = 9500;
+    static final int TT_FUNC = 9600;
+    static final int TT_ARRAY = 9650;
+    static final int TT_OBJECT = 9660; //handle any king of object NOT CURRENTLY USED
     //keywords
-    public static final int TT_IF = 9700;
-    public static final int TT_EIF = 9800;
-    public static final int TT_ELSE = 9850;
-    public static final int TT_THEN = 9875;
-    public static final int TT_DEFFUNC = 9900;
-    public static final int TT_EDEFFUNC = 10000;
-    public static final int TT_WHILE = 10100;
-    public static final int TT_EWHILE = 10200;
-    public static final int TT_DEFINT = 10300;
-    public static final int TT_DEFSTRING = 10400;
-    public static final int TT_DEFDOUBLE = 10425;
-    public static final int TT_RETURN = 10450;
-    public static final int TT_DEFOBJECT = 10451;
-    public static final int TT_NEW = 10452;
+    static final int TT_IF = 9700;
+    static final int TT_EIF = 9800;
+    static final int TT_ELSE = 9850;
+    static final int TT_THEN = 9875;
+    static final int TT_DEFFUNC = 9900;
+    static final int TT_EDEFFUNC = 10000;
+    static final int TT_WHILE = 10100;
+    static final int TT_EWHILE = 10200;
+    static final int TT_DEFINT = 10300;
+    static final int TT_DEFSTRING = 10400;
+    static final int TT_DEFDOUBLE = 10425;
+    static final int TT_RETURN = 10450;
+    static final int TT_DEFOBJECT = 10451;
+    static final int TT_NEW = 10452;
     //math opts
-    public static final int TT_PLUS = 10500;
-    public static final int TT_MINUS = 10600;
-    public static final int TT_MULT = 10700;
-    public static final int TT_DIV = 10800;
-    public static final int TT_MOD = 10850;
-    public static final int TT_LEFT = 10851; // <<
-    public static final int TT_RIGHT = 10852; // >>
+    static final int TT_PLUS = 10500;
+    static final int TT_MINUS = 10600;
+    static final int TT_MULT = 10700;
+    static final int TT_DIV = 10800;
+    static final int TT_MOD = 10850;
+    static final int TT_LEFT = 10851; // <<
+    static final int TT_RIGHT = 10852; // >>
     //logic
-    public static final int TT_LAND = 10900;
-    public static final int TT_LOR = 11000;
-    public static final int TT_LEQ = 11100;
-    public static final int TT_LNEQ = 11200;
-    public static final int TT_LGR = 11300;
-    public static final int TT_LLS = 11500;
-    public static final int TT_LGRE = 11600;
-    public static final int TT_LLSE = 11700;
-    public static final int TT_NOT = 11800;
+    static final int TT_LAND = 10900;
+    static final int TT_LOR = 11000;
+    static final int TT_LEQ = 11100;
+    static final int TT_LNEQ = 11200;
+    static final int TT_LGR = 11300;
+    static final int TT_LLS = 11500;
+    static final int TT_LGRE = 11600;
+    static final int TT_LLSE = 11700;
+    static final int TT_NOT = 11800;
     //other
-    public static final int TT_EQ = 11900;
+    static final int TT_EQ = 11900;
     private static final int DELTA = 100;
     private static final int EOL = -1;
-    /**
-     * contains the current token type
-     */
-    public int ttype;
     /**
      * contient object value
      */
     public Object value;
+    /**
+     * contains the current token type
+     */
+    int ttype;
     private boolean pBack;
     private char cBuf[], line[];
     private int c = 0;
     private int pos = 0;
 
-
-    /**
-     * Constructor
-     */
-    public LexAnn() {
-        //note hard limit on how long a string can be
-        cBuf = new char[DELTA];
-    }
-
-
     /**
      * Convinience constructor which sets line as well
      */
-    public LexAnn(final String firstLine) {
+    LexAnn(final String firstLine) {
         cBuf = new char[DELTA];
         setString(firstLine);
     }
@@ -87,8 +76,8 @@ final class LexAnn {
      */
     public String toString() {
         final Class c = getClass();
-        int n = 0;
-        String tokenName = "", ret = "";
+        int n;
+        String tokenName = "";
         final java.lang.reflect.Field[] fields = c.getFields();
         //try to get the human readable TT_* name via reflec magic
         for (n = 0; n < fields.length; n++) {
@@ -99,9 +88,10 @@ final class LexAnn {
                         tokenName = f.getName();
                     }
                 }
-            } catch (final Exception e) {
+            } catch (final Exception ignored) {
             }
         }
+        String ret;
         if (!tokenName.equals("")) {
             ret = tokenName + ":" + value;
         } else {
@@ -151,7 +141,7 @@ final class LexAnn {
      *
      * @return int - which is the charater read (not very useful)
      */
-    public int nextToken() throws IOException {
+    int nextToken() throws IOException {
         if (!pBack) {
             return nextT();
         } else {
@@ -163,7 +153,7 @@ final class LexAnn {
     /**
      * Causes next call to nextToken to return same value
      */
-    public void pushBack() {
+    void pushBack() {
         pBack = true;
     }
 
@@ -279,11 +269,11 @@ final class LexAnn {
                 ttype = TT_ARRAY;
             } else if (keyword.equals("true")) {
                 ttype = TT_INTEGER;
-                value = new Integer(1);
+                value = 1;
                 return ttype;
             } else if (keyword.equals("false")) {
                 ttype = TT_INTEGER;
-                value = new Integer(0);
+                value = 0;
                 return ttype;
             } else {
                 ttype = TT_WORD;
@@ -306,14 +296,14 @@ final class LexAnn {
                 try {
                     value = Double.valueOf(str);
                 } catch (final NumberFormatException nfexception) {
-                    value = new Double(0.0);
+                    value = 0.0;
                 }
             } else {
                 ttype = TT_INTEGER;
                 try {
                     value = Integer.valueOf(str);
                 } catch (final NumberFormatException nfexception) {
-                    value = new Integer(0);
+                    value = 0;
                 }
             }
         } else {

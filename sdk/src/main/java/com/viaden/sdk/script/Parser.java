@@ -1,28 +1,30 @@
 package com.viaden.sdk.script;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.Hashtable;
 import java.util.Vector;
 
 class Parser {
-    protected static Hashtable opPrio; //operator priority table
+    private static Hashtable opPrio; //operator priority table
     protected LineLoader code; //the code
-    protected LexAnn tok; //tokenizer
-    protected int maxLine;
-    protected Hashtable vars; //function local variables
-    protected Hashtable gVars; //global variables
-    protected FScript host; //link to hosting FScript object
-    protected Hashtable funcs; //function map
-    protected Object retVal; //return value
+    private LexAnn tok; //tokenizer
+    private int maxLine;
+    private Hashtable vars; //function local variables
+    private Hashtable gVars; //global variables
+    private FScript host; //link to hosting FScript object
+    private Hashtable funcs; //function map
+    private Object retVal; //return value
 
-    protected String error[];
+    private String error[];
 
     /**
      * Public constructor
      *
      * @param h a reference to the FScript object
      */
-    public Parser(final FScript h) {
+    Parser(final FScript h) {
         vars = new Hashtable();
         gVars = null;
         funcs = new Hashtable();
@@ -39,7 +41,7 @@ class Parser {
         host = h;
     }
 
-    public final static Object handleNullObject(final Object object) {
+    private static Object handleNullObject(final Object object) {
         if (object == null) {
             //can also throws an exception
             return new NullObject();
@@ -50,17 +52,17 @@ class Parser {
     /**
      * cast object to int
      */
-    public final static int getIntegerValue(Object object) {
+    private static int getIntegerValue(Object object) {
         object = handleNullObject(object);
         if (object instanceof Number) {
             return ((Number) object).intValue();
         }
         if (object instanceof Boolean) {
-            return (((Boolean) object).booleanValue()) ? 1 : 0;
+            return ((Boolean) object) ? 1 : 0;
         }
         try {
             return Integer.valueOf(object.toString()).intValue();
-        } catch (final Exception e) {
+        } catch (final Exception ignored) {
         }
         return 0;
     }
@@ -68,17 +70,17 @@ class Parser {
     /**
      * cast object to double
      */
-    public final static double getDoubleValue(Object object) {
+    private static double getDoubleValue(Object object) {
         object = handleNullObject(object);
         if (object instanceof Number) {
             return ((Number) object).doubleValue();
         }
         if (object instanceof Boolean) {
-            return (((Boolean) object).booleanValue()) ? 1.0 : 0.0;
+            return ((Boolean) object) ? 1.0 : 0.0;
         }
         try {
             return Double.valueOf(object.toString()).doubleValue();
-        } catch (final Exception e) {
+        } catch (final Exception ignored) {
         }
         return 0.0;
     }
@@ -86,7 +88,7 @@ class Parser {
     /**
      * cast object to String
      */
-    public final static String getStringValue(Object object) {
+    private static String getStringValue(Object object) {
         object = handleNullObject(object);
         //remove .0 to double
         if (object instanceof Double) {
@@ -117,7 +119,7 @@ class Parser {
      *             returns an Object (currently a Integer or String) depending
      *             on the return value of the code parsed, or null if none.
      */
-    public Object parse(final int from, final int to) throws IOException, FSException {
+    Object parse(final int from, final int to) throws IOException, FSException {
         // nothing to do when starting beond the code end
         if (code.lineCount() <= from) return null;
         maxLine = to;
@@ -139,7 +141,7 @@ class Parser {
     /**
      * Resets the parser state.
      */
-    public void reset() {
+    void reset() {
         if (vars != null) {
             vars.clear();
         }
@@ -153,21 +155,21 @@ class Parser {
         if (opPrio == null) {
             opPrio = new Hashtable();
             //from low to high
-            opPrio.put(new Integer(LexAnn.TT_LOR), new Integer(1));
-            opPrio.put(new Integer(LexAnn.TT_LAND), new Integer(2));
-            opPrio.put(new Integer(LexAnn.TT_LEQ), new Integer(5));
-            opPrio.put(new Integer(LexAnn.TT_LNEQ), new Integer(5));
-            opPrio.put(new Integer(LexAnn.TT_LGR), new Integer(5));
-            opPrio.put(new Integer(LexAnn.TT_LGRE), new Integer(5));
-            opPrio.put(new Integer(LexAnn.TT_LLS), new Integer(5));
-            opPrio.put(new Integer(LexAnn.TT_LLSE), new Integer(5));
-            opPrio.put(new Integer(LexAnn.TT_PLUS), new Integer(10));
-            opPrio.put(new Integer(LexAnn.TT_MINUS), new Integer(10));
-            opPrio.put(new Integer(LexAnn.TT_MULT), new Integer(20));
-            opPrio.put(new Integer(LexAnn.TT_DIV), new Integer(20));
-            opPrio.put(new Integer(LexAnn.TT_MOD), new Integer(20));
-            opPrio.put(new Integer(LexAnn.TT_LEFT), new Integer(20));
-            opPrio.put(new Integer(LexAnn.TT_RIGHT), new Integer(20));
+            opPrio.put(Integer.valueOf(LexAnn.TT_LOR), Integer.valueOf(1));
+            opPrio.put(Integer.valueOf(LexAnn.TT_LAND), Integer.valueOf(2));
+            opPrio.put(Integer.valueOf(LexAnn.TT_LEQ), Integer.valueOf(5));
+            opPrio.put(Integer.valueOf(LexAnn.TT_LNEQ), Integer.valueOf(5));
+            opPrio.put(Integer.valueOf(LexAnn.TT_LGR), Integer.valueOf(5));
+            opPrio.put(Integer.valueOf(LexAnn.TT_LGRE), Integer.valueOf(5));
+            opPrio.put(Integer.valueOf(LexAnn.TT_LLS), Integer.valueOf(5));
+            opPrio.put(Integer.valueOf(LexAnn.TT_LLSE), Integer.valueOf(5));
+            opPrio.put(Integer.valueOf(LexAnn.TT_PLUS), Integer.valueOf(10));
+            opPrio.put(Integer.valueOf(LexAnn.TT_MINUS), Integer.valueOf(10));
+            opPrio.put(Integer.valueOf(LexAnn.TT_MULT), Integer.valueOf(20));
+            opPrio.put(Integer.valueOf(LexAnn.TT_DIV), Integer.valueOf(20));
+            opPrio.put(Integer.valueOf(LexAnn.TT_MOD), Integer.valueOf(20));
+            opPrio.put(Integer.valueOf(LexAnn.TT_LEFT), Integer.valueOf(20));
+            opPrio.put(Integer.valueOf(LexAnn.TT_RIGHT), Integer.valueOf(20));
         }
     }
 
@@ -440,10 +442,10 @@ class Parser {
                 o[i] = params.elementAt(i);
             }
             final java.lang.reflect.Constructor[] constructors = c.getDeclaredConstructors();
-            for (int i = 0; i < constructors.length; i++) {
-                final Class[] classes = constructors[i].getParameterTypes();
+            for (final Constructor constructor : constructors) {
+                final Class[] classes = constructor.getParameterTypes();
                 if (checkMethods(classes, o)) {
-                    return constructors[i].newInstance(o);
+                    return constructor.newInstance(o);
                 }
             }
         } catch (final Exception e) {
@@ -540,21 +542,20 @@ class Parser {
                 o[i] = params.elementAt(i);
             }
             final java.lang.reflect.Method[] methods = c.getDeclaredMethods();
-            for (int i = 0; i < methods.length; i++) {
-                if (methods[i].getName().equals(methodeName)) {
-                    final Class[] classes = methods[i].getParameterTypes();
+            for (final Method method : methods) {
+                if (method.getName().equals(methodeName)) {
+                    final Class[] classes = method.getParameterTypes();
                     try {
                         if (target == null) {
                             if (checkMethods(classes, o)) {
-                                return methods[i].invoke(c, o);
+                                return method.invoke(c, o);
                             }
                         } else if (checkMethods(classes, o)) {
-                            return methods[i].invoke(target, o);
+                            return method.invoke(target, o);
                         }
                     } catch (final IllegalArgumentException e) {
                         parseError("Error Calling method " + e.getMessage());
                     }
-
                 }
             }
         } catch (final FSException e) {
@@ -620,9 +621,8 @@ class Parser {
             }
 
             val = null; //keep the compiler happy..
-
             if (tok.ttype == LexAnn.TT_DEFINT) {
-                val = new Integer(0);
+                val = Integer.valueOf(0);
             } else if (tok.ttype == LexAnn.TT_DEFSTRING) {
                 val = new String("");
             }
@@ -761,9 +761,9 @@ class Parser {
                         if (not) {
                             if (val instanceof Integer) {
                                 if (((Integer) val).intValue() != 0) {
-                                    val = new Integer(0);
+                                    val = Integer.valueOf(0);
                                 } else {
-                                    val = new Integer(1);
+                                    val = Integer.valueOf(1);
                                 }
                                 not = false;
                             } else {
@@ -773,9 +773,9 @@ class Parser {
                         //unary minus
                         if (negate) {
                             if (val instanceof Integer) {
-                                val = new Integer(-((Integer) val).intValue());
+                                val = Integer.valueOf(-((Integer) val).intValue());
                             } else if (val instanceof Double) {
-                                val = new Double(-((Double) val).doubleValue());
+                                val = Double.valueOf(-((Double) val).doubleValue());
                             } else {
                                 parseError("Type mistmatch for unary -");
                             }
@@ -829,7 +829,7 @@ class Parser {
                     } else {
                         final ETreeNode node = new ETreeNode();
                         node.type = ETreeNode.E_OP;
-                        node.value = new Integer(tok.ttype);
+                        node.value = Integer.valueOf(tok.ttype);
                         if (curNode.parent != null) {
                             final int curPrio = getPrio(tok.ttype);
                             final int parPrio = getPrio(((Integer) curNode.parent.value).intValue());
@@ -916,7 +916,7 @@ class Parser {
 
     //convenience function to get operator priority
     private int getPrio(final int op) {
-        return ((Integer) opPrio.get(new Integer(op))).intValue();
+        return ((Integer) opPrio.get(Integer.valueOf(op))).intValue();
     }
 
     //evaluates the expression tree recursively
@@ -988,9 +988,9 @@ class Parser {
         }
         if (lVal instanceof Number && rVal instanceof Number) {
             if (lVal instanceof Double || rVal instanceof Double) {
-                return new Double(getDoubleValue(lVal) + getDoubleValue(rVal));
+                return Double.valueOf(getDoubleValue(lVal) + getDoubleValue(rVal));
             } else {
-                return new Integer(getIntegerValue(lVal) + getIntegerValue(rVal));
+                return Integer.valueOf(getIntegerValue(lVal) + getIntegerValue(rVal));
             }
         } else {
             return new String(getStringValue(lVal) + getStringValue(rVal));
@@ -1005,9 +1005,9 @@ class Parser {
             }
         }
         if (lVal instanceof Double || rVal instanceof Double) {
-            return new Double(getDoubleValue(lVal) - getDoubleValue(rVal));
+            return Double.valueOf(getDoubleValue(lVal) - getDoubleValue(rVal));
         } else {
-            return new Integer(getIntegerValue(lVal) - getIntegerValue(rVal));
+            return Integer.valueOf(getIntegerValue(lVal) - getIntegerValue(rVal));
         }
     }
 
@@ -1019,9 +1019,9 @@ class Parser {
             }
         }
         if (lVal instanceof Double || rVal instanceof Double) {
-            return new Double(getDoubleValue(lVal) * getDoubleValue(rVal));
+            return Double.valueOf(getDoubleValue(lVal) * getDoubleValue(rVal));
         } else {
-            return new Integer(getIntegerValue(lVal) * getIntegerValue(rVal));
+            return Integer.valueOf(getIntegerValue(lVal) * getIntegerValue(rVal));
         }
     }
 
@@ -1034,7 +1034,7 @@ class Parser {
         }
         final int i = getIntegerValue(rVal);
         if (i != 0) {
-            return new Integer(getIntegerValue(lVal) % i);
+            return Integer.valueOf(getIntegerValue(lVal) % i);
         } else {
             return "NaN";
         }
@@ -1047,7 +1047,7 @@ class Parser {
                 parseError("Type mismatch");
             }
         }
-        return new Integer(getIntegerValue(lVal) >> getIntegerValue(rVal));
+        return Integer.valueOf(getIntegerValue(lVal) >> getIntegerValue(rVal));
     }
 
     //<<
@@ -1057,7 +1057,7 @@ class Parser {
                 parseError("Type mismatch");
             }
         }
-        return new Integer(getIntegerValue(lVal) << getIntegerValue(rVal));
+        return Integer.valueOf(getIntegerValue(lVal) << getIntegerValue(rVal));
     }
 
     //Logical AND
@@ -1068,9 +1068,9 @@ class Parser {
             }
         }
         if (lVal instanceof Double || rVal instanceof Double) {
-            return (getDoubleValue(lVal) != 0 && getDoubleValue(rVal) != 0) ? new Integer(1) : new Integer(0);
+            return (getDoubleValue(lVal) != 0 && getDoubleValue(rVal) != 0) ? Integer.valueOf(1) : Integer.valueOf(0);
         } else {
-            return (getIntegerValue(lVal) != 0 && getIntegerValue(rVal) != 0) ? new Integer(1) : new Integer(0);
+            return (getIntegerValue(lVal) != 0 && getIntegerValue(rVal) != 0) ? Integer.valueOf(1) : Integer.valueOf(0);
         }
     }
 
@@ -1082,9 +1082,9 @@ class Parser {
             }
         }
         if (lVal instanceof Double || rVal instanceof Double) {
-            return (getDoubleValue(lVal) != 0 || getDoubleValue(rVal) != 0) ? new Integer(1) : new Integer(0);
+            return (getDoubleValue(lVal) != 0 || getDoubleValue(rVal) != 0) ? Integer.valueOf(1) : Integer.valueOf(0);
         } else {
-            return (getIntegerValue(lVal) != 0 || getIntegerValue(rVal) != 0) ? new Integer(1) : new Integer(0);
+            return (getIntegerValue(lVal) != 0 || getIntegerValue(rVal) != 0) ? Integer.valueOf(1) : Integer.valueOf(0);
         }
     }
 
@@ -1096,9 +1096,9 @@ class Parser {
             }
         }
         if (lVal instanceof Double || rVal instanceof Double) {
-            return new Double(getDoubleValue(lVal) / getDoubleValue(rVal));
+            return Double.valueOf(getDoubleValue(lVal) / getDoubleValue(rVal));
         } else {
-            return new Integer(getIntegerValue(lVal) / getIntegerValue(rVal));
+            return Integer.valueOf(getIntegerValue(lVal) / getIntegerValue(rVal));
         }
     }
 
@@ -1112,14 +1112,14 @@ class Parser {
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
-                return (getDoubleValue(lVal) == getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getDoubleValue(lVal) == getDoubleValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             } else {
                 //compare Integer
-                return (getIntegerValue(lVal) == getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getIntegerValue(lVal) == getIntegerValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             }
         } else {
             //compare String
-            return (getStringValue(lVal).equals(getStringValue(rVal))) ? new Integer(1) : new Integer(0);
+            return (getStringValue(lVal).equals(getStringValue(rVal))) ? Integer.valueOf(1) : Integer.valueOf(0);
         }
     }
 
@@ -1133,14 +1133,14 @@ class Parser {
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
-                return (getDoubleValue(lVal) < getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getDoubleValue(lVal) < getDoubleValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             } else {
                 //compare Integer
-                return (getIntegerValue(lVal) < getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getIntegerValue(lVal) < getIntegerValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             }
         } else {
             //compare String
-            return (getStringValue(lVal).compareTo(getStringValue(rVal)) < 0) ? new Integer(1) : new Integer(0);
+            return (getStringValue(lVal).compareTo(getStringValue(rVal)) < 0) ? Integer.valueOf(1) : Integer.valueOf(0);
         }
     }
 
@@ -1154,14 +1154,14 @@ class Parser {
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
-                return (getDoubleValue(lVal) <= getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getDoubleValue(lVal) <= getDoubleValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             } else {
                 //compare Integer
-                return (getIntegerValue(lVal) <= getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getIntegerValue(lVal) <= getIntegerValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             }
         } else {
             //compare String
-            return (getStringValue(lVal).compareTo(getStringValue(rVal)) <= 0) ? new Integer(1) : new Integer(0);
+            return (getStringValue(lVal).compareTo(getStringValue(rVal)) <= 0) ? Integer.valueOf(1) : Integer.valueOf(0);
         }
     }
 
@@ -1175,14 +1175,14 @@ class Parser {
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
-                return (getDoubleValue(lVal) > getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getDoubleValue(lVal) > getDoubleValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             } else {
                 //compare Integer
-                return (getIntegerValue(lVal) > getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getIntegerValue(lVal) > getIntegerValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             }
         } else {
             //compare String
-            return (getStringValue(lVal).compareTo(getStringValue(rVal)) > 0) ? new Integer(1) : new Integer(0);
+            return (getStringValue(lVal).compareTo(getStringValue(rVal)) > 0) ? Integer.valueOf(1) : Integer.valueOf(0);
         }
     }
 
@@ -1196,14 +1196,14 @@ class Parser {
         if (lVal instanceof Number && rVal instanceof Number) {
             //compare Double
             if (lVal instanceof Double || rVal instanceof Double) {
-                return (getDoubleValue(lVal) >= getDoubleValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getDoubleValue(lVal) >= getDoubleValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             } else {
                 //compare Integer
-                return (getIntegerValue(lVal) >= getIntegerValue(rVal)) ? new Integer(1) : new Integer(0);
+                return (getIntegerValue(lVal) >= getIntegerValue(rVal)) ? Integer.valueOf(1) : Integer.valueOf(0);
             }
         } else {
             //compare String
-            return (getStringValue(lVal).compareTo(getStringValue(rVal)) >= 0) ? new Integer(1) : new Integer(0);
+            return (getStringValue(lVal).compareTo(getStringValue(rVal)) >= 0) ? Integer.valueOf(1) : Integer.valueOf(0);
         }
     }
 
@@ -1214,7 +1214,7 @@ class Parser {
                 parseError("Type mismatch");
             }
         }
-        return (getIntegerValue(evalEq(lVal, rVal)) == 0) ? new Integer(1) : new Integer(0);
+        return (getIntegerValue(evalEq(lVal, rVal)) == 0) ? Integer.valueOf(1) : Integer.valueOf(0);
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1386,7 +1386,7 @@ class Parser {
             name = getStringValue(tok.value);
             switch (type) {
                 case LexAnn.TT_DEFINT: {
-                    addVar(name, new Integer(0));
+                    addVar(name, Integer.valueOf(0));
                     break;
                 }
                 case LexAnn.TT_DEFSTRING: {
@@ -1394,7 +1394,7 @@ class Parser {
                     break;
                 }
                 case LexAnn.TT_DEFDOUBLE: {
-                    addVar(name, new Double(0));
+                    addVar(name, Double.valueOf(0));
                     break;
                 }
                 case LexAnn.TT_DEFOBJECT: {
@@ -1439,7 +1439,7 @@ class Parser {
 
         //set up our error block
         error[0] = s;
-        error[1] = (new Integer(code.getCurLine())).toString();
+        error[1] = (Integer.valueOf(code.getCurLine())).toString();
         error[2] = code.getLine();
         error[3] = t;
         error[4] = vars.toString();
@@ -1463,7 +1463,7 @@ class Parser {
     }
 
     //return the error block
-    public String[] getError() {
+    String[] getError() {
         return error;
     }
 
@@ -1472,11 +1472,7 @@ class Parser {
     private boolean pComp(final String s) {
         //a compare for tok.sval strings - that avoids the null problem
         final String name = getStringValue(tok.value);
-        if (name != null) {
-            return name.equals(s);
-        } else {
-            return false;
-        }
+        return name != null && name.equals(s);
     }
 
     //misc token access routines
@@ -1502,7 +1498,7 @@ class Parser {
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     //variable access routines
-    public void addVar(final String name, Object value) throws FSException {
+    private void addVar(final String name, Object value) throws FSException {
         if (value == null) {
             value = new NullObject();
         }
@@ -1512,10 +1508,10 @@ class Parser {
             vars.put(name, value);
         } else if (o instanceof Double) {
             //cast to double
-            vars.put(name, new Double(getDoubleValue(value)));
+            vars.put(name, Double.valueOf(getDoubleValue(value)));
         } else if (o instanceof Number) {
             //cast to int
-            vars.put(name, new Integer(getIntegerValue(value)));
+            vars.put(name, Integer.valueOf(getIntegerValue(value)));
         } else {
             //cast to string
             if (o instanceof String) {
@@ -1542,7 +1538,7 @@ class Parser {
         }
     }
 
-    public Object getVar(final String name) throws FSException {
+    private Object getVar(final String name) throws FSException {
         final int pos = name.lastIndexOf('.');
         Object retVal = null;
         if (vars.containsKey(name)) {
@@ -1572,7 +1568,7 @@ class Parser {
     }
 
     // perform a smart casting
-    public void setVar(final String name, Object val) throws FSException {
+    private void setVar(final String name, Object val) throws FSException {
         final boolean set = false;
         if (val == null) {
             val = new NullObject();
@@ -1609,7 +1605,7 @@ class Parser {
                     if (val instanceof Double)
                         var.put(name, val);
                     else if (host.softType) {
-                        var.put(name, new Double(getDoubleValue(val)));
+                        var.put(name, Double.valueOf(getDoubleValue(val)));
                     } else {
                         parseError("Assignment Type mismatch");
                     }
@@ -1619,7 +1615,7 @@ class Parser {
                         if (val instanceof Integer)
                             var.put(name, val);
                         else if (host.softType) {
-                            var.put(name, new Integer(getIntegerValue(val)));
+                            var.put(name, Integer.valueOf(getIntegerValue(val)));
                         } else {
                             parseError("Assignment Type mismatch");
                         }
@@ -1651,7 +1647,7 @@ class Parser {
     //- end addVar setVar getVar with smart casting support
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    public boolean hasVar(final String name) {
+    private boolean hasVar(final String name) {
         //add support to native field
         if (name.indexOf('.') >= 0)
             return true;

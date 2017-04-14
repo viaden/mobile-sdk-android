@@ -6,13 +6,13 @@ import java.io.Reader;
 import java.util.Vector;
 
 final class LineLoader {
-    public Vector lines;
+    private Vector lines;
     private int curLine;
 
     /**
      * Constructor
      */
-    public LineLoader() {
+    LineLoader() {
         lines = new Vector(200);
         curLine = 0;
     }
@@ -22,7 +22,7 @@ final class LineLoader {
      *
      * @param is - the input stream to read from
      */
-    public final void load(final Reader is) throws IOException {
+    final void load(final Reader is) throws IOException {
         final BufferedReader in = new BufferedReader(is);
         String s = in.readLine();
         while (s != null) {
@@ -36,7 +36,7 @@ final class LineLoader {
     /**
      * resets the LineLoader
      */
-    public final void reset() {
+    final void reset() {
         lines = new Vector(200);
         curLine = 0;
     }
@@ -46,7 +46,7 @@ final class LineLoader {
      *
      * @param s the line to load
      */
-    public final void addLine(final String s) {
+    final void addLine(final String s) {
         if (!s.trim().equals("")) {
             lines.addElement(s);
         } else {
@@ -59,7 +59,7 @@ final class LineLoader {
     /**
      * Returns the current execution line
      */
-    public final int getCurLine() {
+    final int getCurLine() {
         return curLine;
     }
 
@@ -68,7 +68,7 @@ final class LineLoader {
      *
      * @param n the line number
      */
-    public final void setCurLine(int n) {
+    final void setCurLine(int n) {
         if (n > lines.size()) {
             n = lines.size() - 1;
         } else if (n < 0) {
@@ -80,21 +80,21 @@ final class LineLoader {
     /**
      * Returns the total number of lines in buffer
      */
-    public final int lineCount() {
+    final int lineCount() {
         return lines.size();
     }
 
     /**
      * Returns the text of the current line
      */
-    public final String getLine() {
+    final String getLine() {
         return (String) lines.elementAt(curLine);
     }
 
     /**
      * Returns the text of the requested line
      */
-    public final String getLine(final int n) {
+    final String getLine(final int n) {
         if (n < 0 || n >= lines.size()) return "";
         return (String) lines.elementAt(n);
     }
