@@ -13,19 +13,19 @@
             "id": "%{device.id.value}",
             "idType": "%{device.id.type.ampiri}",
             "platform": "ANDROID",
-            "vendor": "",
-            "model": "",
-            "osVersion": "",
-            "userAgent": "",
+            "vendor": "%{device.vendor}",
+            "model": "%{device.model}",
+            "osVersion": "%{os.version}",
+            "userAgent": "%{user.agent}",
             "screenSize": {
-              "w": 0,
-              "h": 0
+              "w": "%{device.display.width}",
+              "h": "%{device.display.height}"
             },
-            "screenOrientation": "",
-            "connectionType": ""
+            "screenOrientation": "%{device.screen.orientation}",
+            "connectionType": "UNKNOWN"
           },
           "sdk": {
-            "version": ""
+            "version": "3.8.1"
           }
         }
       },

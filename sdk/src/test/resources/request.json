@@ -8,19 +8,19 @@
       "id": "fake_device_id_value",
       "idType": "GAID",
       "platform": "ANDROID",
-      "vendor": "",
-      "model": "",
-      "osVersion": "",
-      "userAgent": "",
+      "vendor": "unknown",
+      "model": "unknown",
+      "osVersion": "6.0.1_r3",
+      "userAgent": "Mozilla\/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build\/IML74K) AppleWebkit\/534.30 (KHTML, like Gecko) Version\/4.0 Mobile Safari\/534.30",
       "screenSize": {
-        "w": 0,
-        "h": 0
+        "w": "480",
+        "h": "854"
       },
-      "screenOrientation": "",
-      "connectionType": ""
+      "screenOrientation": "UNKNOWN",
+      "connectionType": "UNKNOWN"
     },
     "sdk": {
-      "version": ""
+      "version": "3.8.1"
     }
   }
 }

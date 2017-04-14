@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;
 
-@Implements(DeviceIdTypeRetriever.class)
+@Implements(Platform.DeviceIdTypeRetriever.class)
 public class ShadowDeviceIdTypeRetriever {
     static String value = "fake_device_id_type";
 

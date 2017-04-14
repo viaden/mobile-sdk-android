@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;
 
-@Implements(DeviceIdValueRetriever.class)
+@Implements(Platform.DeviceIdValueRetriever.class)
 public class ShadowDeviceIdValueRetriever {
 
     @Implementation
