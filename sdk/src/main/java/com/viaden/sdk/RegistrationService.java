@@ -3,9 +3,11 @@ package com.viaden.sdk;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -24,6 +26,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -51,8 +55,19 @@ public class RegistrationService extends IntentService {
             }
             return;
         }
-        final InstanceData instanceData = new InstanceRetriever(InstanceID.getInstance(this), getPackageName(), projectId).get();
+        final InstanceData savedInstanceData = InstanceDataStorage.load(this);
+        if (savedInstanceData != null && !savedInstanceData.isExpired()) {
+            return;
+        }
+        final InstanceData instanceData = new InstanceData.Builder(InstanceID.getInstance(this), getPackageName(), projectId).build();
         if (instanceData == null) {
+            return;
+        }
+        InstanceDataStorage.save(this, instanceData);
+        if (instanceData == savedInstanceData) {
+            return;
+        }
+        if (savedInstanceData == null) {
             if (Log.isLoggable(BuildConfig.LOG_TAG, Log.ERROR)) {
                 Log.e(BuildConfig.LOG_TAG, "Failed to load instanceId data");
             }
@@ -116,38 +131,19 @@ public class RegistrationService extends IntentService {
         }
     }
 
-    private static class InstanceRetriever {
+    private static class InstanceDataStorage extends PrefsStorage {
         @NonNull
-        private final InstanceID instanceId;
-        @NonNull
-        private final String packageName;
-        @NonNull
-        private final String projectId;
-
-        private InstanceRetriever(@NonNull final InstanceID instanceId, @NonNull final String packageName, @NonNull final String projectId) {
-            this.instanceId = instanceId;
-            this.packageName = packageName;
-            this.projectId = projectId;
-        }
+        private static final String PREFIX = "instanceData";
 
         @Nullable
-        private InstanceData get() {
-            final String token;
-            try {
-                token = instanceId.getToken(projectId, GoogleCloudMessaging.INSTANCE_ID_SCOPE);
-            } catch (@NonNull final IOException e) {
-                return null;
-            }
-            return new InstanceData.Builder()
-                    .setId(instanceId.getId())
-                    .setApplication(packageName)
-                    .setTokens(Collections.singletonList(new Token.Builder()
-                            .setToken(token)
-                            .setAuthorizedEntity(projectId)
-                            .setScope(GoogleCloudMessaging.INSTANCE_ID_SCOPE)
-                            .build()))
-                    .setCreationTime(instanceId.getCreationTime())
-                    .build();
+        static InstanceData load(@NonNull final Context context) {
+            return new InstanceData.Builder(getPrefs(context), PREFIX).build();
+        }
+
+        static void save(@NonNull final Context context, @NonNull final InstanceData instanceData) {
+            final SharedPreferences.Editor editor = getPrefs(context).edit();
+            instanceData.toPrefs(editor, PREFIX);
+            editor.apply();
         }
     }
 
@@ -159,21 +155,65 @@ public class RegistrationService extends IntentService {
         @NonNull
         private final TokenStore tokens;
         private final long creationTime;
+        private final long expiredMillis;
 
-        InstanceData(@NonNull final String id, @NonNull final String application, @NonNull final List<Token> tokens, final long creationTime) {
+        InstanceData(@NonNull final String id, @NonNull final String application, @NonNull final List<Token> tokens, final long creationTime,
+                     final long expiredMillis) {
             this.id = id;
             this.application = application;
             this.tokens = new TokenStore(tokens);
             this.creationTime = creationTime;
+            this.expiredMillis = expiredMillis;
+        }
+
+        boolean isExpired() {
+            return expiredMillis <= SystemClock.uptimeMillis();
         }
 
         @NonNull
         private JSONObject asJson() throws JSONException {
             return new JSONObject()
-                    .put("instanceId", id)
-                    .put("application", application)
-                    .put("tokens", tokens.asJson())
-                    .put("creationTime", creationTime);
+                    .put(Keys.INSTANCE_ID, id)
+                    .put(Keys.APPLICATION, application)
+                    .put(Keys.TOKENS, tokens.asJson())
+                    .put(Keys.CREATION_TIME, creationTime)
+                    .put(Keys.EXPIRED_MILLIS, expiredMillis);
+        }
+
+        void toPrefs(@NonNull final SharedPreferences.Editor prefs, @NonNull final String prefix) {
+            prefs.putString(prefix + "." + Keys.INSTANCE_ID, id);
+            prefs.putString(prefix + "." + Keys.APPLICATION, application);
+            tokens.toPrefs(prefs, prefix + "." + Keys.TOKENS);
+            prefs.putLong(prefix + "." + Keys.CREATION_TIME, creationTime);
+            prefs.putLong(prefix + "." + Keys.EXPIRED_MILLIS, expiredMillis);
+        }
+
+        @Override
+        public boolean equals(@Nullable final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof InstanceData)) {
+                return false;
+            }
+            final InstanceData that = (InstanceData) o;
+            return creationTime == that.creationTime &&
+                    Objects.equal(id, that.id) &&
+                    Objects.equal(application, that.application) &&
+                    Objects.equal(tokens, that.tokens);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(id, application, tokens, creationTime, expiredMillis);
+        }
+
+        private interface Keys {
+            String INSTANCE_ID = "instanceId";
+            String APPLICATION = "application";
+            String TOKENS = "tokens";
+            String CREATION_TIME = "creationTime";
+            String EXPIRED_MILLIS = "expiredTime";
         }
 
         private static class Builder {
@@ -182,32 +222,40 @@ public class RegistrationService extends IntentService {
             @Nullable
             private String application;
             @Nullable
-            private List<Token> tokens;
+            private TokenStore.Builder tokens;
             @Nullable
             private Long creationTime;
+            @Nullable
+            private Long expiredMillis;
 
-            @NonNull
-            private Builder setId(@Nullable final String id) {
-                this.id = id;
-                return this;
+            Builder(@NonNull final InstanceID instanceId, @NonNull final String packageName, @NonNull final String projectId) {
+                final String token;
+                try {
+                    token = instanceId.getToken(projectId, GoogleCloudMessaging.INSTANCE_ID_SCOPE);
+                } catch (@NonNull final IOException e) {
+                    return;
+                }
+                id = instanceId.getId();
+                application = packageName;
+                tokens = new TokenStore.Builder(Collections.singletonList(new Token.Builder()
+                        .setToken(token)
+                        .setAuthorizedEntity(projectId)
+                        .setScope(GoogleCloudMessaging.INSTANCE_ID_SCOPE)
+                        .build()));
+                creationTime = instanceId.getCreationTime();
+                expiredMillis = SystemClock.uptimeMillis() + 24 * 3600 * 1000;
             }
 
-            @NonNull
-            private Builder setApplication(@Nullable final String application) {
-                this.application = application;
-                return this;
-            }
-
-            @NonNull
-            private Builder setTokens(@Nullable final List<Token> tokens) {
-                this.tokens = tokens;
-                return this;
-            }
-
-            @NonNull
-            private Builder setCreationTime(@Nullable final Long creationTime) {
-                this.creationTime = creationTime;
-                return this;
+            Builder(@NonNull final SharedPreferences prefs, @NonNull final String prefix) {
+                id = prefs.getString(prefix + "." + Keys.INSTANCE_ID, null);
+                application = prefs.getString(prefix + "." + Keys.APPLICATION, null);
+                tokens = new TokenStore.Builder(prefs, prefix + "." + Keys.TOKENS);
+                if (prefs.contains(prefix + "." + Keys.CREATION_TIME)) {
+                    creationTime = prefs.getLong(prefix + "." + Keys.CREATION_TIME, 0L);
+                }
+                if (prefs.contains(prefix + "." + Keys.EXPIRED_MILLIS)) {
+                    expiredMillis = prefs.getLong(prefix + "." + Keys.EXPIRED_MILLIS, 0L);
+                }
             }
 
             @Nullable
@@ -219,12 +267,15 @@ public class RegistrationService extends IntentService {
                     return null;
                 }
                 if (tokens == null) {
-                    tokens = Collections.emptyList();
+                    tokens = new TokenStore.Builder();
                 }
                 if (creationTime == null) {
                     creationTime = 0L;
                 }
-                return new InstanceData(id, application, tokens, creationTime);
+                if (expiredMillis == null) {
+                    expiredMillis = 0L;
+                }
+                return new InstanceData(id, application, tokens.build(), creationTime, expiredMillis);
             }
         }
     }
@@ -245,6 +296,70 @@ public class RegistrationService extends IntentService {
             }
             return json;
         }
+
+        void toPrefs(@NonNull final SharedPreferences.Editor prefs, @NonNull final String prefix) {
+            if (!tokens.isEmpty()) {
+                prefs.putInt(prefix, tokens.size());
+                for (int i = 0; i < tokens.size(); i++) {
+                    tokens.get(i).toPrefs(prefs, prefix + "." + i);
+                }
+            }
+        }
+
+        @Override
+        public boolean equals(@Nullable final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof TokenStore)) {
+                return false;
+            }
+            final TokenStore that = (TokenStore) o;
+            return Objects.equal(tokens, that.tokens);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(tokens);
+        }
+
+        static class Builder {
+            @Nullable
+            private List<Token.Builder> tokens;
+
+            Builder() {
+            }
+
+            Builder(@NonNull final SharedPreferences prefs, @NonNull final String prefix) {
+                final int count = prefs.getInt(prefix, 0);
+                tokens = new ArrayList<>(count);
+                for (int i = 0; i < count; i++) {
+                    tokens.add(new Token.Builder(prefs, prefix + "." + i));
+                }
+            }
+
+            Builder(@NonNull final Collection<Token> list) {
+                tokens = new ArrayList<>(list.size());
+                for (final Token token : list) {
+                    tokens.add(token.newBuilder());
+                }
+            }
+
+            @NonNull
+            List<Token> build() {
+                if (tokens == null) {
+                    return Collections.emptyList();
+                }
+                final List<Token> list = new ArrayList<>(tokens.size());
+                for (final Token.Builder token : tokens) {
+                    final Token newToken = token.build();
+                    if (newToken != null) {
+                        list.add(newToken);
+                    }
+                }
+                return list;
+            }
+        }
     }
 
     private static class Token {
@@ -262,11 +377,47 @@ public class RegistrationService extends IntentService {
         }
 
         @NonNull
+        Builder newBuilder() {
+            return new Builder(this);
+        }
+
+        @NonNull
         private JSONObject asJson() throws JSONException {
             return new JSONObject()
-                    .put("token", token)
-                    .put("authorizedEntity", authorizedEntity)
-                    .put("scope", scope);
+                    .put(Keys.TOKEN, token)
+                    .put(Keys.AUTHORIZED_ENTITY, authorizedEntity)
+                    .put(Keys.SCOPE, scope);
+        }
+
+        void toPrefs(@NonNull final SharedPreferences.Editor prefs, @NonNull final String prefix) {
+            prefs.putString(prefix + "." + Keys.TOKEN, token);
+            prefs.putString(prefix + "." + Keys.AUTHORIZED_ENTITY, authorizedEntity);
+            prefs.putString(prefix + "." + Keys.SCOPE, scope);
+        }
+
+        @Override
+        public boolean equals(@Nullable final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Token)) {
+                return false;
+            }
+            final Token that = (Token) o;
+            return Objects.equal(token, that.token) &&
+                    Objects.equal(authorizedEntity, that.authorizedEntity) &&
+                    Objects.equal(scope, that.scope);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(token, authorizedEntity, scope);
+        }
+
+        private interface Keys {
+            String TOKEN = "token";
+            String AUTHORIZED_ENTITY = "authorizedEntity";
+            String SCOPE = "scope";
         }
 
         private static class Builder {
@@ -276,6 +427,21 @@ public class RegistrationService extends IntentService {
             private String authorizedEntity;
             @Nullable
             private String scope;
+
+            Builder() {
+            }
+
+            public Builder(@NonNull final Token origin) {
+                token = origin.token;
+                authorizedEntity = origin.authorizedEntity;
+                scope = origin.scope;
+            }
+
+            Builder(@NonNull final SharedPreferences prefs, @NonNull final String prefix) {
+                token = prefs.getString(prefix + "." + Keys.TOKEN, null);
+                authorizedEntity = prefs.getString(prefix + "." + Keys.AUTHORIZED_ENTITY, null);
+                scope = prefs.getString(prefix + "." + Keys.SCOPE, null);
+            }
 
             @NonNull
             private Builder setToken(@Nullable final String token) {
