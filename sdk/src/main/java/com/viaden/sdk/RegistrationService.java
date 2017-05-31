@@ -18,10 +18,6 @@ import com.viaden.sdk.http.HttpMethod;
 import com.viaden.sdk.http.HttpRequest;
 import com.viaden.sdk.http.HttpResponse;
 
-import org.json.JSONException;
-
-import java.io.IOException;
-
 public class RegistrationService extends IntentService {
 
     public RegistrationService() {
@@ -58,13 +54,14 @@ public class RegistrationService extends IntentService {
             return;
         }
         InstanceDataStorage.save(this, instanceData);
-        if (instanceData == savedInstanceData) {
+        if (instanceData.equals(savedInstanceData)) {
             return;
         }
         try {
             final Uri uri = Uri.parse("https://" + endpoint + ".firebaseio.com").buildUpon()
                     .appendEncodedPath("instances")
                     .appendEncodedPath(instanceData.id + ".json")
+                    .appendQueryParameter("print", "silent")
                     .build();
             if (Log.isLoggable(BuildConfig.LOG_TAG, Log.DEBUG)) {
                 Log.d(BuildConfig.LOG_TAG, uri.toString());
@@ -80,7 +77,7 @@ public class RegistrationService extends IntentService {
                     Log.e(BuildConfig.LOG_TAG, "Server response status [" + response.getStatusCode() + "] " + response.getReasonPhrase());
                 }
             }
-        } catch (@NonNull final IOException | JSONException e) {
+        } catch (@NonNull final Exception e) {
             if (Log.isLoggable(BuildConfig.LOG_TAG, Log.ERROR)) {
                 Log.e(BuildConfig.LOG_TAG, "Failed to save instanceId data", e);
             }

@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
-apply from: rootProject.file('build-config/coverage.gradle')
+apply from: rootProject.file('.build-config/coverage.gradle')
 
 group = 'com.github.viaden'
 
@@ -49,10 +49,10 @@ android {
 }
 
 dependencies {
-    compile 'com.google.android.gms:play-services-gcm:10.2.1'
+    compile 'com.google.android.gms:play-services-gcm:10.2.6'
     //
     testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-core:2.7.22'
+    testCompile 'org.mockito:mockito-core:2.8.9'
     testCompile 'org.robolectric:robolectric:3.3.2'
-    testCompile 'com.google.truth:truth:0.32'
+    testCompile 'com.google.truth:truth:0.33'
 }
