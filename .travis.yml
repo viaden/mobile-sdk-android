@@ -3,38 +3,29 @@ language: android
 jdk:
   - oraclejdk8
 
-addons:
-  apt:
-    sources:
-    - avsm
-    packages:
-    - autoconf
-    - automake
-    - build-essential
-    - libffi-dev
-    - libgmp-dev
-    - libmpc-dev
-    - libmpfr-dev
-    - m4
-    - pkg-config
-    - python-software-properties
-    - unzip
-    - zlib1g-dev
-    - ocaml
-    - ocaml-native-compilers
-    - camlp4-extra opam
-
-#android:
-#  components:
-#    - tools
-#    - platform-tools
-#    - tools
+#addons:
+#  apt:
+#    sources:
+#    - avsm
+#    packages:
+#    - autoconf
+#    - automake
+#    - build-essential
+#    - libffi-dev
+#    - libgmp-dev
+#    - libmpc-dev
+#    - libmpfr-dev
+#    - m4
+#    - pkg-config
+#    - python-software-properties
+#    - unzip
+#    - zlib1g-dev
+#    - ocaml
+#    - ocaml-native-compilers
+#    - camlp4-extra opam
 
 before_install:
-  # compile and install Infer from sources
-  - source .build-scripts/install-infer.sh
-  #- echo y | android update sdk --no-ui --all --filter "tools"
-  #- echo y | android update sdk --no-ui --all --filter "platform-tools"
+#  - source .build-scripts/install-infer.sh
   - mkdir "$ANDROID_HOME/licenses" || true
   - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
 
