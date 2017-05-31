@@ -9,11 +9,11 @@ final class Objects {
     private Objects() {
     }
 
-    public static boolean equal(@Nullable Object a, @Nullable Object b) {
+    static boolean equal(@Nullable final Object a, @Nullable final Object b) {
         return a == b || (a != null && a.equals(b));
     }
 
-    public static int hashCode(@Nullable Object... objects) {
+    static int hashCode(@Nullable final Object... objects) {
         return Arrays.hashCode(objects);
     }
 }

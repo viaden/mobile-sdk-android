@@ -100,5 +100,4 @@ class Headers {
             return new Headers(headers);
         }
     }
-
 }
