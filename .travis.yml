@@ -3,11 +3,11 @@ language: android
 jdk:
   - oraclejdk8
 
-android:
-  components:
-    - tools
-    - platform-tools
-    - tools
+#android:
+#  components:
+#    - tools
+#    - platform-tools
+#    - tools
 
 before_install:
   # compile and install Infer from sources
