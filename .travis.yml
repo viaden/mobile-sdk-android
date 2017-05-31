@@ -3,11 +3,17 @@ language: android
 jdk:
   - oraclejdk8
 
+android:
+  components:
+    - tools
+    - platform-tools
+    - tools
+
 before_install:
   # compile and install Infer from sources
   - source .build-scripts/travis.before_install.sh
-  - echo y | android update sdk --no-ui --all --filter "tools"
-  - echo y | android update sdk --no-ui --all --filter "platform-tools"
+  #- echo y | android update sdk --no-ui --all --filter "tools"
+  #- echo y | android update sdk --no-ui --all --filter "platform-tools"
   - mkdir "$ANDROID_HOME/licenses" || true
   - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
 
