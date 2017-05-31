@@ -3,6 +3,27 @@ language: android
 jdk:
   - oraclejdk8
 
+addons:
+  apt:
+    sources:
+    - avsm
+    packages:
+    - autoconf
+    - automake
+    - build-essential
+    - libffi-dev
+    - libgmp-dev
+    - libmpc-dev
+    - libmpfr-dev
+    - m4
+    - pkg-config
+    - python-software-properties
+    - unzip
+    - zlib1g-dev
+    - ocaml
+    - ocaml-native-compilers
+    - camlp4-extra opam
+
 #android:
 #  components:
 #    - tools
