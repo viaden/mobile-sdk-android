@@ -26,6 +26,9 @@ public class GcmService extends GcmListenerService {
         try {
             json = new JSONObject(message);
         } catch (@NonNull final JSONException e) {
+            if (Log.isLoggable(BuildConfig.LOG_TAG, Log.ERROR)) {
+                Log.e(BuildConfig.LOG_TAG, e.getMessage(), e);
+            }
             return null;
         }
         return new Command.Builder(json).build();

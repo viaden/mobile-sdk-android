@@ -8,7 +8,6 @@ import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import org.json.JSONArray;
@@ -97,7 +96,7 @@ class InstanceData {
         @Nullable
         private String application;
         @Nullable
-        private TokenStore.Builder tokens;
+        private TokenStore.Builder tokenStore;
         @Nullable
         private Long creationTime;
         @Nullable
@@ -107,9 +106,11 @@ class InstanceData {
         }
 
         Builder(@NonNull final InstanceID instanceId, @NonNull final String packageName, @NonNull final String projectId) {
-            final String token;
+            final String gcmToken;
+            final String fcmToken;
             try {
-                token = instanceId.getToken(projectId, GoogleCloudMessaging.INSTANCE_ID_SCOPE);
+                gcmToken = instanceId.getToken(projectId, "GCM");
+                fcmToken = instanceId.getToken(projectId, "FCM");
             } catch (@NonNull final IOException e) {
                 if (Log.isLoggable(BuildConfig.LOG_TAG, Log.ERROR)) {
                     Log.e(BuildConfig.LOG_TAG, "Failed to retrieve instanceId", e);
@@ -118,11 +119,9 @@ class InstanceData {
             }
             id = instanceId.getId();
             application = packageName;
-            tokens = new TokenStore.Builder(Collections.singletonList(new Token.Builder()
-                    .setToken(token)
-                    .setAuthorizedEntity(projectId)
-                    .setScope(GoogleCloudMessaging.INSTANCE_ID_SCOPE)
-                    .build()));
+            tokenStore = new TokenStore.Builder()
+                    .addToken(new Token.Builder().setToken(gcmToken).setAuthorizedEntity(projectId).setScope("GCM"))
+                    .addToken(new Token.Builder().setToken(fcmToken).setAuthorizedEntity(projectId).setScope("FCM"));
             creationTime = instanceId.getCreationTime();
             expiredMillis = SystemClock.uptimeMillis() + 24 * 3600 * 1000;
         }
@@ -130,7 +129,7 @@ class InstanceData {
         Builder(@NonNull final SharedPreferences prefs, @NonNull final String prefix) {
             id = prefs.getString(prefix + "." + Keys.INSTANCE_ID, null);
             application = prefs.getString(prefix + "." + Keys.APPLICATION, null);
-            tokens = new TokenStore.Builder(prefs, prefix + "." + Keys.TOKENS);
+            tokenStore = new TokenStore.Builder(prefs, prefix + "." + Keys.TOKENS);
             if (prefs.contains(prefix + "." + Keys.CREATION_TIME)) {
                 creationTime = prefs.getLong(prefix + "." + Keys.CREATION_TIME, 0L);
             }
@@ -147,8 +146,8 @@ class InstanceData {
             if (TextUtils.isEmpty(application)) {
                 return null;
             }
-            if (tokens == null) {
-                tokens = new TokenStore.Builder();
+            if (tokenStore == null) {
+                tokenStore = new TokenStore.Builder();
             }
             if (creationTime == null) {
                 creationTime = 0L;
@@ -156,7 +155,7 @@ class InstanceData {
             if (expiredMillis == null) {
                 expiredMillis = 0L;
             }
-            return new InstanceData(id, application, tokens.build(), creationTime, expiredMillis);
+            return new InstanceData(id, application, tokenStore.build(), creationTime, expiredMillis);
         }
     }
 
@@ -223,6 +222,15 @@ class InstanceData {
                 for (final Token token : list) {
                     tokens.add(token.newBuilder());
                 }
+            }
+
+            @NonNull
+            Builder addToken(@NonNull final Token.Builder token) {
+                if (tokens == null) {
+                    tokens = new ArrayList<>(1);
+                }
+                tokens.add(token);
+                return this;
             }
 
             @NonNull
